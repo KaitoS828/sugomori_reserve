@@ -38,11 +38,11 @@ export default async function CancelDonePage({
       {info && (
         <div className="rounded-2xl border border-gray-200 p-6 text-left text-sm">
           <div className="flex justify-between"><span className="text-gray-500">予約番号</span><span className="font-mono font-semibold text-gray-900">{info.code}</span></div>
-          <div className="mt-2 flex justify-between"><span className="text-gray-500">返金額</span><span className="font-semibold text-teal-700">¥{info.refunded.toLocaleString()}</span></div>
+          <div className="mt-2 flex justify-between"><span className="text-gray-500">返金額</span><span className="font-semibold text-[#b8571f]">¥{info.refunded.toLocaleString()}</span></div>
         </div>
       )}
 
-      <Link href="/reserve" className="inline-block rounded-full bg-teal-600 px-8 py-2.5 text-sm font-medium text-white hover:bg-teal-500">
+      <Link href="/reserve" className="inline-block rounded-full bg-[#d46a2a] px-8 py-2.5 text-sm font-medium text-white hover:bg-[#d46a2a]">
         ホームへ
       </Link>
     </div>

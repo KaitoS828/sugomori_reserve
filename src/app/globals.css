@@ -11,8 +11,12 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-accent: var(--accent);
+  --color-campfire: #d46a2a;
+  --color-beige: #b08a5f;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-mincho: var(--font-shippori), "Shippori Mincho", serif;
+  --font-inter: var(--font-inter), "Inter", sans-serif;
 }
 
 body {

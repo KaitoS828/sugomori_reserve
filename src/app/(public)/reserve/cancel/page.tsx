@@ -6,7 +6,7 @@ import { confirmCancel } from "./actions";
 export const dynamic = "force-dynamic";
 
 const field =
-  "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal-500";
+  "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#d46a2a]";
 
 type ResvRow = {
   id: string; code: string; check_in: string; check_out: string; nights: number;
@@ -39,7 +39,7 @@ export default async function CancelPage({
       <div className="mx-auto max-w-xl space-y-4">
         <h1 className="text-2xl font-bold text-gray-900">キャンセル申請</h1>
         <p className="text-sm text-gray-600">予約が確認できませんでした。</p>
-        <Link href="/reserve/lookup" className="text-sm text-teal-700 hover:underline">予約照会へ戻る</Link>
+        <Link href="/reserve/lookup" className="text-sm text-[#b8571f] hover:underline">予約照会へ戻る</Link>
       </div>
     );
   }
@@ -49,7 +49,7 @@ export default async function CancelPage({
       <div className="mx-auto max-w-xl space-y-4">
         <h1 className="text-2xl font-bold text-gray-900">キャンセル申請</h1>
         <p className="rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-600">この予約はすでにキャンセル済みです。</p>
-        <Link href="/reserve" className="text-sm text-teal-700 hover:underline">ホームへ</Link>
+        <Link href="/reserve" className="text-sm text-[#b8571f] hover:underline">ホームへ</Link>
       </div>
     );
   }
@@ -76,9 +76,9 @@ export default async function CancelPage({
       </div>
 
       {/* 返金予定額 */}
-      <div className="rounded-2xl border border-teal-200 bg-teal-50 p-5">
+      <div className="rounded-2xl border border-[#ecd8c6] bg-[#fbf3ec] p-5">
         <p className="text-sm font-medium text-gray-900">返金予定額</p>
-        <p className="mt-1 text-3xl font-bold text-teal-700">¥{refund.refundAmount.toLocaleString()}</p>
+        <p className="mt-1 text-3xl font-bold text-[#b8571f]">¥{refund.refundAmount.toLocaleString()}</p>
         <p className="mt-2 text-xs text-gray-600">
           チェックインまで {refund.daysBefore} 日 ・ キャンセル料 {Math.round(refund.chargeRate * 100)}%
           （¥{refund.feeAmount.toLocaleString()}）
@@ -98,7 +98,7 @@ export default async function CancelPage({
           <div className="space-y-1.5">
             {CANCEL_CATEGORIES.map((c, i) => (
               <label key={c} className="flex items-center gap-2 text-sm text-gray-700">
-                <input type="radio" name="category" value={c} required defaultChecked={i === 0} className="accent-teal-600" />
+                <input type="radio" name="category" value={c} required defaultChecked={i === 0} className="accent-[#d46a2a]" />
                 {c}
               </label>
             ))}

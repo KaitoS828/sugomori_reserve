@@ -110,7 +110,7 @@ export default async function PlanDetailPage({
             {available === false ? (
               <span className="rounded-full bg-red-50 px-6 py-2.5 text-sm font-medium text-red-600">満室</span>
             ) : validDates && available ? (
-              <Link href={`/reserve/form?${formQuery.toString()}`} className="rounded-full bg-teal-600 px-8 py-2.5 text-sm font-medium text-white transition hover:bg-teal-500">
+              <Link href={`/reserve/form?${formQuery.toString()}`} className="rounded-full bg-[#d46a2a] px-8 py-2.5 text-sm font-medium text-white transition hover:bg-[#d46a2a]">
                 予約する
               </Link>
             ) : (
@@ -119,7 +119,7 @@ export default async function PlanDetailPage({
           </div>
         </div>
         {available && (
-          <p className="mt-2 text-sm text-teal-700">✓ 空室があります</p>
+          <p className="mt-2 text-sm text-[#b8571f]">✓ 空室があります</p>
         )}
       </form>
 

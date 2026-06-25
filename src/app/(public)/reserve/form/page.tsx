@@ -8,7 +8,7 @@ import { startCheckout } from "./actions";
 export const dynamic = "force-dynamic";
 
 const field =
-  "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal-500";
+  "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#d46a2a]";
 const label = "text-sm font-medium text-gray-900";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
@@ -140,7 +140,7 @@ export default async function ReserveFormPage({
         </div>
 
         <div className="flex justify-center">
-          <button className="rounded-full bg-teal-600 px-12 py-3 font-medium text-white transition hover:bg-teal-500">
+          <button className="rounded-full bg-[#d46a2a] px-12 py-3 font-medium text-white transition hover:bg-[#d46a2a]">
             お支払いへ進む
           </button>
         </div>

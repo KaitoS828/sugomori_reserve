@@ -32,7 +32,7 @@ export default async function CompletePage({
   return (
     <div className="mx-auto max-w-xl space-y-6 text-center">
       <div className="flex flex-col items-center gap-3 pt-6">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-teal-50 text-3xl text-teal-600">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#fbf3ec] text-3xl text-[#d46a2a]">
           ✓
         </div>
         <h1 className="text-2xl font-bold text-gray-900">ご予約ありがとうございます</h1>
@@ -56,7 +56,7 @@ export default async function CompletePage({
               <dt className="text-gray-500">状況</dt>
               <dd>
                 {resv.payment_status === "paid" ? (
-                  <span className="rounded bg-teal-50 px-2 py-0.5 text-teal-700">決済完了・予約確定</span>
+                  <span className="rounded bg-[#fbf3ec] px-2 py-0.5 text-[#b8571f]">決済完了・予約確定</span>
                 ) : (
                   <span className="rounded bg-amber-50 px-2 py-0.5 text-amber-700">決済確認中…</span>
                 )}
@@ -72,8 +72,8 @@ export default async function CompletePage({
       <div className="space-y-2 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-left text-sm text-gray-700">
         <p className="font-semibold text-gray-900">ご予約後のご案内</p>
         <p>📌 <span className="font-semibold">予約番号は必ず保存してください。</span>予約の確認・変更・キャンセルに必要です。</p>
-        <p>🔑 会員登録（マイページ）をされている方は、<Link href="/account" className="text-teal-700 underline">マイページ</Link>からいつでもご予約の確認・<span className="font-semibold">キャンセル</span>が可能です。</p>
-        <p>📞 ご不明な点は <a href="tel:00000000000" className="font-semibold text-teal-700">000-0000-0000</a> までお問い合わせください。</p>
+        <p>🔑 会員登録（マイページ）をされている方は、<Link href="/account" className="text-[#b8571f] underline">マイページ</Link>からいつでもご予約の確認・<span className="font-semibold">キャンセル</span>が可能です。</p>
+        <p>📞 ご不明な点は <a href="tel:00000000000" className="font-semibold text-[#b8571f]">000-0000-0000</a> までお問い合わせください。</p>
       </div>
 
       <div className="flex flex-wrap justify-center gap-3">
@@ -81,7 +81,7 @@ export default async function CompletePage({
           ホームへ
         </Link>
         {resv && (
-          <Link href={`/reserve/lookup?code=${resv.code}`} className="rounded-full bg-teal-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-teal-500">
+          <Link href={`/reserve/lookup?code=${resv.code}`} className="rounded-full bg-[#d46a2a] px-6 py-2.5 text-sm font-medium text-white hover:bg-[#d46a2a]">
             予約を確認
           </Link>
         )}

@@ -5,7 +5,7 @@ import type { ReservationStatus } from "@/types/db";
 export const dynamic = "force-dynamic";
 
 const field =
-  "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal-500";
+  "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#d46a2a]";
 
 const STATUS_LABEL: Record<ReservationStatus, string> = {
   pending: "決済確認中",
@@ -52,7 +52,7 @@ export default async function LookupPage({
       <h1 className="text-2xl font-bold text-gray-900">予約照会・キャンセル</h1>
 
       {cancelled && (
-        <p className="rounded-lg bg-teal-50 px-4 py-3 text-sm text-teal-700">
+        <p className="rounded-lg bg-[#fbf3ec] px-4 py-3 text-sm text-[#b8571f]">
           キャンセルを受け付けました。返金がある場合は数日内に処理されます。
         </p>
       )}
