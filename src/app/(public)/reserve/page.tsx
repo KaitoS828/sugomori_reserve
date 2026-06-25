@@ -39,31 +39,42 @@ export default async function ReservePage() {
   }));
 
   return (
-    <div className="grid gap-6 md:grid-cols-[200px_1fr]">
-      <aside className="space-y-3 text-sm">
-        <div>
-          <p className="font-semibold text-gray-900">所在地</p>
-          <p className="text-gray-600">{facility?.address ?? "—"}</p>
-        </div>
-        <div>
-          <p className="font-semibold text-gray-900">お問い合わせ</p>
-          <p className="text-gray-600">{facility?.phone ?? "—"}</p>
-        </div>
+    <div className="space-y-8">
+      {/* ヒーローバナー（建物写真・幅100%・高さ控えめ） */}
+      <div className="relative w-full overflow-hidden rounded-2xl border border-gray-200 h-40 md:h-56">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/trailhouse.jpeg"
           alt="トレイルハウス SUGOMORI の外観（満天の星の下）"
-          className="mt-2 w-full rounded-xl border border-gray-200 object-cover aspect-[4/3] shadow-sm"
+          className="absolute inset-0 h-full w-full object-cover"
         />
-        <p className="font-inter text-[10px] uppercase tracking-[0.2em] text-gray-400">SUGOMORI — Shimo-Taiki, Hokkaido</p>
-      </aside>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
+        <div className="absolute bottom-0 left-0 p-5 md:p-7 text-white">
+          <p className="font-inter text-[10px] uppercase tracking-[0.25em] text-white/80">Trail House</p>
+          <h1 className="mt-1 text-xl tracking-[0.15em] md:text-2xl">トレイルハウス SUGOMORI</h1>
+          <p className="mt-1 text-sm tracking-[0.05em] text-white/85">{facility?.address ?? ""}</p>
+        </div>
+      </div>
 
-      <div>
-        {roomTypeId ? (
-          <ReserveCalendar plans={plans} roomTypeId={roomTypeId} maxGuests={maxGuests} />
-        ) : (
-          <p className="text-sm text-gray-500">現在ご予約いただけるプランがありません。</p>
-        )}
+      <div className="grid gap-6 md:grid-cols-[200px_1fr]">
+        <aside className="space-y-3 text-sm">
+          <div>
+            <p className="font-semibold text-gray-900">所在地</p>
+            <p className="text-gray-600">{facility?.address ?? "—"}</p>
+          </div>
+          <div>
+            <p className="font-semibold text-gray-900">お問い合わせ</p>
+            <p className="text-gray-600">{facility?.phone ?? "—"}</p>
+          </div>
+        </aside>
+
+        <div>
+          {roomTypeId ? (
+            <ReserveCalendar plans={plans} roomTypeId={roomTypeId} maxGuests={maxGuests} />
+          ) : (
+            <p className="text-sm text-gray-500">現在ご予約いただけるプランがありません。</p>
+          )}
+        </div>
       </div>
     </div>
   );
