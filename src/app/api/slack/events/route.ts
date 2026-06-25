@@ -18,14 +18,29 @@ export const maxDuration = 60;
 
 function verify(rawBody: string, ts: string | null, sig: string | null): boolean {
   const secret = process.env.SLACK_SIGNING_SECRET;
-  if (!secret || !ts || !sig) return false;
+  if (!secret) {
+    console.error("SLACK_SIGNING_SECRET is not set in environment variables.");
+    return false;
+  }
+  if (!ts || !sig) {
+    console.error("Missing Slack timestamp or signature headers.");
+    return false;
+  }
   // 5分以上前のリクエストは拒否
-  if (Math.abs(Date.now() / 1000 - Number(ts)) > 60 * 5) return false;
+  if (Math.abs(Date.now() / 1000 - Number(ts)) > 60 * 5) {
+    console.error("Slack request timestamp is too old.");
+    return false;
+  }
   const base = `v0:${ts}:${rawBody}`;
   const hmac = "v0=" + crypto.createHmac("sha256", secret).update(base).digest("hex");
   try {
-    return crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(sig));
-  } catch {
+    const isValid = crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(sig));
+    if (!isValid) {
+      console.error("Slack signature mismatch.");
+    }
+    return isValid;
+  } catch (e) {
+    console.error("Error verifying Slack signature:", e);
     return false;
   }
 }
@@ -52,26 +67,35 @@ export async function POST(req: NextRequest) {
   }
 
   const event = body.event;
-  if (event && event.type === "app_mention") {
-    // メンション部分を除いたテキスト
-    const text = String(event.text ?? "").replace(/<@[^>]+>/g, "").trim();
-    const channel = event.channel;
-    const thread = event.thread_ts ?? event.ts;
+  if (event) {
+    const isAppMention = event.type === "app_mention";
+    // DM(messageかつchannel_typeがim、かつボット自身のメッセージではないこと)
+    const isDM = event.type === "message" && event.channel_type === "im" && !event.bot_id && !event.subtype;
 
-    // 3秒以内に200を返し、処理はバックグラウンドで
-    waitUntil(
-      (async () => {
-        const slack = new WebClient(process.env.SLACK_BOT_TOKEN);
-        try {
-          const history = threadHistory.get(thread) ?? [];
-          const { reply, messages } = await runAgent(text, history);
-          threadHistory.set(thread, messages.slice(-24));
-          await slack.chat.postMessage({ channel, thread_ts: thread, text: reply });
-        } catch (e) {
-          await slack.chat.postMessage({ channel, thread_ts: thread, text: `エラー: ${e instanceof Error ? e.message : String(e)}` });
-        }
-      })(),
-    );
+    if (isAppMention || isDM) {
+      // メンション部分を除いたテキスト（DMの場合はそのまま）
+      const text = isAppMention
+        ? String(event.text ?? "").replace(/<@[^>]+>/g, "").trim()
+        : String(event.text ?? "").trim();
+      const channel = event.channel;
+      const thread = event.thread_ts ?? event.ts;
+
+      // 3秒以内に200を返し、処理はバックグラウンドで
+      waitUntil(
+        (async () => {
+          const slack = new WebClient(process.env.SLACK_BOT_TOKEN);
+          try {
+            const history = threadHistory.get(thread) ?? [];
+            const { reply, messages } = await runAgent(text, history);
+            threadHistory.set(thread, messages.slice(-24));
+            await slack.chat.postMessage({ channel, thread_ts: thread, text: reply });
+          } catch (e) {
+            console.error("Error processing Slack agent:", e);
+            await slack.chat.postMessage({ channel, thread_ts: thread, text: `エラー: ${e instanceof Error ? e.message : String(e)}` });
+          }
+        })(),
+      );
+    }
   }
 
   return NextResponse.json({ ok: true });
