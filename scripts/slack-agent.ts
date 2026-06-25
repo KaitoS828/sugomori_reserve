@@ -3,7 +3,7 @@
  * 公開URL不要。`npx tsx scripts/slack-agent.ts` で起動。
  *
  * 必要な環境変数（.env.local）:
- *   ANTHROPIC_API_KEY  : Claude APIキー
+ *   GROQ_API_KEY      : Groq APIキー（無料・OpenAI互換）
  *   SLACK_BOT_TOKEN    : xoxb-...（OAuth & Permissions のBot User OAuth Token）
  *   SLACK_APP_TOKEN    : xapp-...（Basic Information のApp-Level Token, scope: connections:write）
  *   （Supabase/Stripe等は既存のまま）
