@@ -49,6 +49,13 @@ export default async function ReservePage() {
           <p className="font-semibold text-gray-900">お問い合わせ</p>
           <p className="text-gray-600">{facility?.phone ?? "—"}</p>
         </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/trailhouse.jpeg"
+          alt="トレイルハウス SUGOMORI の外観（満天の星の下）"
+          className="mt-2 w-full rounded-xl border border-gray-200 object-cover aspect-[4/3] shadow-sm"
+        />
+        <p className="font-inter text-[10px] uppercase tracking-[0.2em] text-gray-400">SUGOMORI — Shimo-Taiki, Hokkaido</p>
       </aside>
 
       <div>
