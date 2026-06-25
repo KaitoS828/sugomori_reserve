@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { randomUUID } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { getStripe } from "@/lib/stripe";
 import { canBook, generateReservationCode } from "@/lib/reservations";
 import { eachNight } from "@/lib/availability";
@@ -66,6 +67,8 @@ export async function startCheckout(formData: FormData) {
   if (nights.length < 1) fail(planId, "日程が不正です");
 
   const supabase = createAdminClient();
+  const sessionClient = await createClient();
+  const { data: { user } } = await sessionClient.auth.getUser();
 
   // プラン・料金・客室タイプ
   const { data: plan } = await supabase
@@ -98,6 +101,7 @@ export async function startCheckout(formData: FormData) {
     last_name_kana: lastKana || null, first_name_kana: firstKana || null,
     email, phone: phone || null,
     prefecture, city, address, building,
+    ...(user?.email === email ? { auth_user_id: user.id, is_member: true } : {}),
   };
   if (existing) {
     customerId = existing.id;

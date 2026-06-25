@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { calcPrice, type Discount } from "@/lib/pricing";
 import { eachNight } from "@/lib/availability";
 import { startCheckout } from "./actions";
@@ -13,6 +14,19 @@ const label = "text-sm font-medium text-gray-900";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
 const MINS = ["00", "15", "30", "45"];
+
+type CustomerProfile = {
+  last_name: string | null;
+  first_name: string | null;
+  last_name_kana: string | null;
+  first_name_kana: string | null;
+  email: string | null;
+  phone: string | null;
+  prefecture: string | null;
+  city: string | null;
+  address: string | null;
+  building: string | null;
+};
 
 export default async function ReserveFormPage({
   searchParams,
@@ -33,6 +47,26 @@ export default async function ReserveFormPage({
   const pricePerNight = (plan.plan_prices ?? [])[0]?.price_per_night ?? 0;
   const hasDates = from && to && eachNight(from, to).length >= 1;
   const price = hasDates ? calcPrice(from!, to!, pricePerNight, (plan.discounts ?? []) as Discount[]) : null;
+  const nextUrl = `/reserve/form?${new URLSearchParams({
+    plan: planId,
+    ...(from ? { from } : {}),
+    ...(to ? { to } : {}),
+    ...(guests ? { guests } : {}),
+  }).toString()}`;
+
+  const sessionClient = await createClient();
+  const { data: { user } } = await sessionClient.auth.getUser();
+  let profile: CustomerProfile | null = null;
+  if (user) {
+    const { data } = await supabase
+      .from("customers")
+      .select("last_name, first_name, last_name_kana, first_name_kana, email, phone, prefecture, city, address, building")
+      .or(`auth_user_id.eq.${user.id},email.eq.${user.email ?? ""}`)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    profile = data as CustomerProfile | null;
+  }
 
   return (
     <div className="space-y-6">
@@ -62,6 +96,24 @@ export default async function ReserveFormPage({
         <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">{error}</p>
       )}
 
+      <div className="rounded-2xl border border-gray-200 p-5 text-sm">
+        {user ? (
+          <p className="text-gray-700">
+            {user.email} でログイン中です。登録済みの情報を入力欄に反映しています。
+          </p>
+        ) : (
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-gray-700">一度泊まったことがある場合はこちら</p>
+            <Link
+              href={`/account/login?next=${encodeURIComponent(nextUrl)}`}
+              className="rounded-full border border-gray-300 px-4 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              ログインして入力を省略
+            </Link>
+          </div>
+        )}
+      </div>
+
       <form action={startCheckout} className="space-y-6">
         <input type="hidden" name="plan" value={planId} />
         <input type="hidden" name="from" value={from ?? ""} />
@@ -72,44 +124,44 @@ export default async function ReserveFormPage({
           <div className="grid gap-2 md:grid-cols-[160px_1fr] md:items-center">
             <span className={label}>氏名 <span className="text-red-500">*</span></span>
             <div className="flex gap-2">
-              <input name="last_name" placeholder="姓" required className={field} />
-              <input name="first_name" placeholder="名" required className={field} />
+              <input name="last_name" placeholder="姓" required defaultValue={profile?.last_name ?? ""} className={field} />
+              <input name="first_name" placeholder="名" required defaultValue={profile?.first_name ?? ""} className={field} />
             </div>
           </div>
           <div className="grid gap-2 md:grid-cols-[160px_1fr] md:items-center">
             <span className={label}>氏名（カナ） <span className="text-red-500">*</span></span>
             <div className="flex gap-2">
-              <input name="last_name_kana" placeholder="セイ" required className={field} />
-              <input name="first_name_kana" placeholder="メイ" required className={field} />
+              <input name="last_name_kana" placeholder="セイ" required defaultValue={profile?.last_name_kana ?? ""} className={field} />
+              <input name="first_name_kana" placeholder="メイ" required defaultValue={profile?.first_name_kana ?? ""} className={field} />
             </div>
           </div>
           <div className="grid gap-2 md:grid-cols-[160px_1fr] md:items-center">
             <span className={label}>メールアドレス <span className="text-red-500">*</span></span>
-            <input type="email" name="email" placeholder="abcde@example.com" required className={field} />
+            <input type="email" name="email" placeholder="abcde@example.com" required defaultValue={profile?.email ?? user?.email ?? ""} className={field} />
           </div>
           <div className="grid gap-2 md:grid-cols-[160px_1fr] md:items-center">
             <span className={label}>メールアドレス（確認） <span className="text-red-500">*</span></span>
-            <input type="email" name="email2" placeholder="abcde@example.com" required className={field} />
+            <input type="email" name="email2" placeholder="abcde@example.com" required defaultValue={profile?.email ?? user?.email ?? ""} className={field} />
           </div>
           <div className="grid gap-2 md:grid-cols-[160px_1fr] md:items-center">
             <span className={label}>電話番号 <span className="text-red-500">*</span></span>
-            <input name="phone" placeholder="0312345678" required className={field} />
+            <input name="phone" placeholder="0312345678" required defaultValue={profile?.phone ?? ""} className={field} />
           </div>
           <div className="grid gap-2 md:grid-cols-[160px_1fr] md:items-center">
             <span className={label}>都道府県（自宅） <span className="text-red-500">*</span></span>
-            <input name="prefecture" placeholder="北海道" required className={field} />
+            <input name="prefecture" placeholder="北海道" required defaultValue={profile?.prefecture ?? ""} className={field} />
           </div>
           <div className="grid gap-2 md:grid-cols-[160px_1fr] md:items-center">
             <span className={label}>市区町村（自宅） <span className="text-red-500">*</span></span>
-            <input name="city" placeholder="広尾郡大樹町" required className={field} />
+            <input name="city" placeholder="広尾郡大樹町" required defaultValue={profile?.city ?? ""} className={field} />
           </div>
           <div className="grid gap-2 md:grid-cols-[160px_1fr] md:items-center">
             <span className={label}>番地（自宅） <span className="text-red-500">*</span></span>
-            <input name="address" placeholder="山海谷町1-3-11" required className={field} />
+            <input name="address" placeholder="山海谷町1-3-11" required defaultValue={profile?.address ?? ""} className={field} />
           </div>
           <div className="grid gap-2 md:grid-cols-[160px_1fr] md:items-center">
             <span className={label}>建物名（自宅）</span>
-            <input name="building" placeholder="谷海山ビル3階" className={field} />
+            <input name="building" placeholder="谷海山ビル3階" defaultValue={profile?.building ?? ""} className={field} />
           </div>
         </div>
 

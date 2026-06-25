@@ -65,7 +65,10 @@ const row = (k: string, v: string) =>
 
 export function bookingConfirmedHtml(p: {
   name: string; code: string; plan: string; checkIn: string; checkOut: string; nights: number; guests: number; amount: number;
+  requestNote?: string | null; accountEmail?: string | null; temporaryPassword?: string | null; accountUrl?: string; termsUrl?: string;
 }): string {
+  const accountUrl = p.accountUrl ?? "/account";
+  const termsUrl = p.termsUrl ?? "/terms";
   return wrap(`
     <p>${esc(p.name)} 様</p>
     <p>ご予約ありがとうございます。下記の内容で予約が確定しました。</p>
@@ -75,18 +78,28 @@ export function bookingConfirmedHtml(p: {
       ${row("日程", `${esc(p.checkIn)} 〜 ${esc(p.checkOut)}（${p.nights}泊）`)}
       ${row("人数", `${p.guests}名`)}
       ${row("お支払い金額", `¥${p.amount.toLocaleString()}`)}
+      ${row("ご要望など", esc(p.requestNote ?? ""))}
     </table>
+    ${p.temporaryPassword && p.accountEmail ? `
+      <div style="margin:16px 0;padding:12px;background:#f0fdfa;border:1px solid #99f6e4;border-radius:8px;font-size:13px">
+        <p style="margin:0 0 6px"><strong>会員アカウントを自動作成しました。</strong></p>
+        <p style="margin:0 0 4px">メールアドレス: ${esc(p.accountEmail)}</p>
+        <p style="margin:0">初期パスワード: <strong>${esc(p.temporaryPassword)}</strong></p>
+      </div>
+    ` : ""}
     <p>当日のご来館を心よりお待ちしております。</p>
     <div style="margin-top:16px;padding:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-size:13px">
       <p style="margin:0 0 6px"><strong>📌 予約番号は必ず保存してください。</strong>確認・変更・キャンセルに必要です。</p>
-      <p style="margin:0 0 6px">🔑 会員（マイページ）の方は、マイページからいつでも確認・<strong>キャンセル</strong>が可能です。</p>
-      <p style="margin:0">📞 ご不明点は <strong>000-0000-0000</strong> までお問い合わせください。</p>
+      <p style="margin:0 0 6px">会員（マイページ）の方は、マイページからいつでも確認・キャンセルが可能です。</p>
+      <p style="margin:0 0 6px"><a href="${esc(accountUrl)}">${esc(accountUrl)}</a></p>
+      <p style="margin:0 0 6px">ご不明点は080-5830-4957 までお問い合わせください。</p>
+      <p style="margin:0">キャンセルポリシーの確認はこちら<br><a href="${esc(termsUrl)}">${esc(termsUrl)}</a></p>
     </div>`);
 }
 
 // オーナー宛（新規予約）
 export function ownerBookingHtml(p: {
-  name: string; code: string; plan: string; checkIn: string; checkOut: string; nights: number; guests: number; amount: number; email?: string; phone?: string;
+  name: string; code: string; plan: string; checkIn: string; checkOut: string; nights: number; guests: number; amount: number; email?: string; phone?: string; accountUrl?: string; lookupUrl?: string;
 }): string {
   return wrap(`
     <p><strong>🆕 新規予約が入りました</strong></p>
@@ -97,6 +110,8 @@ export function ownerBookingHtml(p: {
       ${row("プラン", esc(p.plan))}
       ${row("日程", `${esc(p.checkIn)} 〜 ${esc(p.checkOut)}（${p.nights}泊）`)}
       ${row("金額", `¥${p.amount.toLocaleString()}`)}
+      ${p.accountUrl ? row("マイページURL", `<a href="${esc(p.accountUrl)}">${esc(p.accountUrl)}</a>`) : ""}
+      ${p.lookupUrl ? row("予約確認URL", `<a href="${esc(p.lookupUrl)}">${esc(p.lookupUrl)}</a>`) : ""}
     </table>`);
 }
 

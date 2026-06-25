@@ -33,10 +33,11 @@ export async function signup(formData: FormData) {
 export async function login(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const next = String(formData.get("next") ?? "").trim();
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) redirect(`/account/login?error=${encodeURIComponent(error.message)}`);
-  redirect("/account");
+  redirect(next.startsWith("/") && !next.startsWith("//") ? next : "/account");
 }
 
 export async function logout() {
