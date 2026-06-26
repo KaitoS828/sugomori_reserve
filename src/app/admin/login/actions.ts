@@ -2,14 +2,6 @@
 
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { createHash } from "crypto";
-
-function expectedToken() {
-  const u = process.env.ADMIN_USERNAME ?? "";
-  const p = process.env.ADMIN_PASSWORD ?? "";
-  const s = process.env.ADMIN_SESSION_SECRET ?? "";
-  return createHash("sha256").update(`${u}|${p}|${s}`).digest("hex");
-}
 
 export async function login(formData: FormData) {
   const username = String(formData.get("username") ?? "");
@@ -24,7 +16,7 @@ export async function login(formData: FormData) {
   }
 
   const cookieStore = await cookies();
-  cookieStore.set("admin_token", expectedToken(), {
+  cookieStore.set("admin_token", process.env.ADMIN_SESSION_SECRET!, {
     httpOnly: true,
     path: "/",
     sameSite: "lax",
