@@ -20,20 +20,20 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col md:flex-row">
-      <aside className="flex shrink-0 flex-col border-b border-gray-800 bg-gray-900/40 md:w-56 md:border-b-0 md:border-r">
+    <div className="flex min-h-screen flex-col bg-gray-50 md:flex-row">
+      <aside className="flex shrink-0 flex-col border-b border-gray-200 bg-white md:w-56 md:border-b-0 md:border-r">
         {/* ブランド + モバイル用ログアウト */}
-        <div className="flex items-center justify-between border-b border-gray-800 px-4 py-3 md:py-4">
+        <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 md:py-4">
           <Link href="/admin" className="flex items-baseline">
-            <span className="text-lg font-semibold text-white">SUGOMORI</span>
-            <span className="ml-1 text-sm text-cyan-400">予約</span>
+            <span className="text-lg font-semibold text-gray-900">SUGOMORI</span>
+            <span className="ml-1 text-sm text-cyan-500">予約</span>
           </Link>
           <div className="flex items-center gap-1 md:hidden">
-            <Link href="/admin/help" className="rounded-lg px-2 py-1 text-xs text-gray-500 hover:bg-gray-800 hover:text-white">
+            <Link href="/admin/help" className="rounded-lg px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 hover:text-gray-900">
               ❓使い方
             </Link>
             <form action={logout}>
-              <button className="rounded-lg px-2 py-1 text-xs text-gray-500 hover:bg-gray-800 hover:text-white">
+              <button className="rounded-lg px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 hover:text-gray-900">
                 ログアウト
               </button>
             </form>
@@ -46,7 +46,7 @@ export default function AdminLayout({
             <Link
               key={item.href}
               href={item.href}
-              className="block whitespace-nowrap rounded-lg px-3 py-2 text-sm text-gray-400 transition hover:bg-gray-800 hover:text-white"
+              className="block whitespace-nowrap rounded-lg px-3 py-2 text-sm text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
             >
               {item.label}
             </Link>
@@ -54,15 +54,15 @@ export default function AdminLayout({
         </nav>
 
         {/* PC用フッター: 使い方FAQ + ログアウト */}
-        <div className="hidden border-t border-gray-800 p-3 md:block">
+        <div className="hidden border-t border-gray-200 p-3 md:block">
           <Link
             href="/admin/help"
-            className="mb-1 block rounded-lg px-3 py-2 text-sm text-gray-400 transition hover:bg-gray-800 hover:text-white"
+            className="mb-1 block rounded-lg px-3 py-2 text-sm text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
           >
             ❓ 使い方・FAQ
           </Link>
           <form action={logout}>
-            <button className="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-500 transition hover:bg-gray-800 hover:text-white">
+            <button className="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-500 transition hover:bg-gray-100 hover:text-gray-900">
               ログアウト
             </button>
           </form>
