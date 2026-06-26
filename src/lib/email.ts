@@ -56,7 +56,7 @@ const wrap = (inner: string) => `
     </div>
     <div style="padding:20px 0">${inner}</div>
     <div style="border-top:1px solid #e5e7eb;padding:12px 0;color:#9ca3af;font-size:12px">
-      北海道広尾郡大樹町下大樹 SUGOMORI / ☎ 000-0000-0000
+      北海道広尾郡大樹町下大樹 SUGOMORI / ☎ 080-5830-4957
     </div>
   </div>`;
 

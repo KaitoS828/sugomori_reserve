@@ -73,7 +73,7 @@ export default async function CompletePage({
         <p className="font-semibold text-gray-900">ご予約後のご案内</p>
         <p>📌 <span className="font-semibold">予約番号は必ず保存してください。</span>予約の確認・変更・キャンセルに必要です。</p>
         <p>🔑 会員登録（マイページ）をされている方は、<Link href="/account" className="text-[#b8571f] underline">マイページ</Link>からいつでもご予約の確認・<span className="font-semibold">キャンセル</span>が可能です。</p>
-        <p>📞 ご不明な点は <a href="tel:00000000000" className="font-semibold text-[#b8571f]">000-0000-0000</a> までお問い合わせください。</p>
+        <p>📞 ご不明な点は <a href="tel:08058304957" className="font-semibold text-[#b8571f]">080-5830-4957</a> までお問い合わせください。</p>
       </div>
 
       <div className="flex flex-wrap justify-center gap-3">
