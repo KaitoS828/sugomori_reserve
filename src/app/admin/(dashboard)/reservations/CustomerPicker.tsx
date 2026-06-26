@@ -6,7 +6,7 @@ import Link from "next/link";
 export type CustomerOption = { id: string; label: string };
 
 const field =
-  "w-full rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 text-sm text-white outline-none focus:border-cyan-400";
+  "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-cyan-400";
 
 export function CustomerPicker({ customers }: { customers: CustomerOption[] }) {
   const [mode, setMode] = useState<"existing" | "manual">("existing");
@@ -14,7 +14,7 @@ export function CustomerPicker({ customers }: { customers: CustomerOption[] }) {
   return (
     <div className="space-y-2 md:col-span-4">
       <div className="flex flex-wrap items-center gap-4 text-xs">
-        <label className="flex items-center gap-1 text-gray-400">
+        <label className="flex items-center gap-1 text-gray-500">
           <input
             type="radio"
             name="customer_mode"
@@ -24,7 +24,7 @@ export function CustomerPicker({ customers }: { customers: CustomerOption[] }) {
           />
           既存顧客から選択
         </label>
-        <label className="flex items-center gap-1 text-gray-400">
+        <label className="flex items-center gap-1 text-gray-500">
           <input
             type="radio"
             name="customer_mode"
@@ -34,7 +34,7 @@ export function CustomerPicker({ customers }: { customers: CustomerOption[] }) {
           />
           手入力（新規顧客）
         </label>
-        <Link href="/admin/customers" className="text-cyan-400 hover:text-cyan-300">
+        <Link href="/admin/customers" className="text-cyan-600 hover:text-cyan-300">
           顧客名簿に追加 →
         </Link>
       </div>
