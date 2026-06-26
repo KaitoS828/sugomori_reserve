@@ -3,23 +3,9 @@ import { login } from "./actions";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; redirect?: string; sent?: string; email?: string }>;
+  searchParams: Promise<{ error?: string; redirect?: string }>;
 }) {
-  const { error, redirect, sent, email } = await searchParams;
-
-  if (sent) {
-    return (
-      <main className="flex min-h-screen items-center justify-center px-4">
-        <div className="w-full max-w-sm space-y-4 rounded-2xl border border-gray-800 bg-gray-900/60 p-8 text-center">
-          <h1 className="text-xl font-semibold text-white">メールを送信しました</h1>
-          <p className="text-sm text-gray-400">
-            <span className="text-cyan-400">{email}</span> に確認メールを送りました。
-            <br />メール内のリンクをクリックしてログインしてください。
-          </p>
-        </div>
-      </main>
-    );
-  }
+  const { error, redirect } = await searchParams;
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4">
@@ -41,12 +27,23 @@ export default async function LoginPage({
         <input type="hidden" name="redirect" value={redirect ?? "/admin"} />
 
         <label className="block space-y-1">
-          <span className="text-sm text-gray-400">メールアドレス</span>
+          <span className="text-sm text-gray-400">ユーザーID</span>
           <input
-            type="email"
-            name="email"
+            type="text"
+            name="username"
             required
-            autoComplete="email"
+            autoComplete="username"
+            className="w-full rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 text-white outline-none focus:border-cyan-400"
+          />
+        </label>
+
+        <label className="block space-y-1">
+          <span className="text-sm text-gray-400">パスワード</span>
+          <input
+            type="password"
+            name="password"
+            required
+            autoComplete="current-password"
             className="w-full rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 text-white outline-none focus:border-cyan-400"
           />
         </label>
@@ -55,7 +52,7 @@ export default async function LoginPage({
           type="submit"
           className="w-full rounded-lg bg-cyan-500 px-4 py-2 font-medium text-gray-950 transition hover:bg-cyan-400"
         >
-          確認メールを送る
+          ログイン
         </button>
       </form>
     </main>
