@@ -212,7 +212,7 @@ export default async function CalendarPage({
       </div>
 
       {selectedRes && (() => {
-        const sr = selectedRes as ReservationWithRefs;
+        const sr = selectedRes as unknown as ReservationWithRefs;
         const c = sr.customers;
         const custName = c ? [c.last_name, c.first_name].filter(Boolean).join(" ") || "（無名）" : "—";
         return (
