@@ -28,9 +28,9 @@ const WEEK = ["日", "月", "火", "水", "木", "金", "土"];
 export default async function CalendarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; new?: string; error?: string }>;
+  searchParams: Promise<{ month?: string; new?: string; error?: string; selected?: string }>;
 }) {
-  const { month, new: newDate, error } = await searchParams;
+  const { month, new: newDate, error, selected } = await searchParams;
   const now = new Date();
   let year = now.getFullYear();
   let month0 = now.getMonth();
@@ -47,7 +47,7 @@ export default async function CalendarPage({
   const rangeTo = ymd(new Date(year, month0, daysInMonth + 1)); // 翌月1日
 
   const supabase = createAdminClient();
-  const [{ count: roomCount }, { data: resData }, { data: blockedData }] =
+  const [{ count: roomCount }, { data: resData }, { data: blockedData }, { data: selectedRes }] =
     await Promise.all([
       supabase.from("rooms").select("id", { count: "exact", head: true }).eq("is_active", true),
       supabase
@@ -62,6 +62,13 @@ export default async function CalendarPage({
         .select("start_date, end_date, room_type_id")
         .lte("start_date", rangeTo)
         .gte("end_date", rangeFrom),
+      selected
+        ? supabase
+            .from("reservations")
+            .select("*, customers(id,last_name,first_name,last_name_kana,first_name_kana,email,phone,prefecture,city,address,building), room_types(id,name), rooms(id,name), plans(id,name)")
+            .eq("id", selected)
+            .single()
+        : Promise.resolve({ data: null }),
     ]);
 
   const totalRooms = roomCount ?? 0;
@@ -190,7 +197,7 @@ export default async function CalendarPage({
                 )}
               </div>
               {cell.resv.slice(0, 3).map((r) => (
-                <Link key={r.id} href="/admin/reservations" className="block truncate rounded bg-cyan-50/60 px-1 py-0.5 text-[10px] text-cyan-200 hover:bg-cyan-900/60">
+                <Link key={r.id} href={`/admin/calendar?month=${monthStr(year, month0)}&selected=${r.id}`} className={`block truncate rounded px-1 py-0.5 text-[10px] hover:bg-cyan-900/60 ${selected === r.id ? "bg-cyan-700/80 text-white" : "bg-cyan-50/60 text-cyan-200"}`}>
                   {r.rooms?.name ? `${r.rooms.name} ` : ""}
                   {r.customers ? [r.customers.last_name, r.customers.first_name].filter(Boolean).join("") || "予約" : "予約"}
                 </Link>
@@ -203,6 +210,43 @@ export default async function CalendarPage({
           );
         })}
       </div>
+
+      {selectedRes && (() => {
+        const sr = selectedRes as ReservationWithRefs;
+        const c = sr.customers;
+        const custName = c ? [c.last_name, c.first_name].filter(Boolean).join(" ") || "（無名）" : "—";
+        return (
+          <div className="rounded-2xl border border-cyan-900/60 bg-white p-5 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="font-medium text-gray-900">予約詳細 — {custName} 様</h2>
+              <Link href={`/admin/calendar?month=${monthStr(year, month0)}`} className="text-sm text-gray-400 hover:text-gray-600">✕ 閉じる</Link>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 md:grid-cols-4 mb-4">
+              <span>予約番号: <strong className="text-gray-900">{sr.code}</strong></span>
+              <span>日程: <strong className="text-gray-900">{sr.check_in} 〜 {sr.check_out}（{sr.nights}泊）</strong></span>
+              <span>人数: <strong className="text-gray-900">{sr.num_guests}名</strong></span>
+              <span>金額: <strong className="text-gray-900">¥{sr.amount.toLocaleString()}</strong></span>
+              <span>プラン: <strong className="text-gray-900">{sr.plans?.name ?? "—"}</strong></span>
+              <span>客室: <strong className="text-gray-900">{sr.rooms?.name ?? "—"}</strong></span>
+              <span>経路: <strong className="text-gray-900">{sr.source}</strong></span>
+              <span>支払: <strong className="text-gray-900">{sr.payment_status}</strong></span>
+            </div>
+            {c && (
+              <div className="rounded-lg border border-gray-100 bg-gray-50 p-4 text-sm">
+                <p className="mb-2 font-medium text-gray-700">予約者情報</p>
+                <dl className="grid grid-cols-1 gap-x-6 gap-y-1.5 md:grid-cols-2">
+                  <div className="flex gap-2"><dt className="w-28 shrink-0 text-gray-400">氏名（カナ）</dt><dd className="text-gray-900">{[c.last_name_kana, c.first_name_kana].filter(Boolean).join(" ") || "—"}</dd></div>
+                  <div className="flex gap-2"><dt className="w-28 shrink-0 text-gray-400">メール</dt><dd>{c.email ? <a href={`mailto:${c.email}`} className="text-cyan-600 hover:underline">{c.email}</a> : "—"}</dd></div>
+                  <div className="flex gap-2"><dt className="w-28 shrink-0 text-gray-400">電話</dt><dd>{c.phone ? <a href={`tel:${c.phone}`} className="text-cyan-600 hover:underline">{c.phone}</a> : "—"}</dd></div>
+                  {sr.check_in_time && <div className="flex gap-2"><dt className="w-28 shrink-0 text-gray-400">到着予定</dt><dd className="text-gray-900">{sr.check_in_time}</dd></div>}
+                  <div className="flex gap-2 md:col-span-2"><dt className="w-28 shrink-0 text-gray-400">住所</dt><dd className="text-gray-900">{[c.prefecture, c.city, c.address, c.building].filter(Boolean).join(" ") || "—"}</dd></div>
+                  {sr.survey && <div className="flex gap-2 md:col-span-2"><dt className="w-28 shrink-0 text-gray-400">ご要望</dt><dd className="whitespace-pre-wrap text-gray-900">{sr.survey}</dd></div>}
+                </dl>
+              </div>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }
