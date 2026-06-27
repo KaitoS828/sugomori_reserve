@@ -68,6 +68,7 @@ export function bookingConfirmedHtml(p: {
   requestNote?: string | null; accountEmail?: string | null; temporaryPassword?: string | null; accountUrl?: string; termsUrl?: string; isMember?: boolean;
 }): string {
   const accountUrl = p.accountUrl ?? "/account";
+  const loginUrl = accountUrl.replace(/\/account$/, "/account/login");
   const termsUrl = p.termsUrl ?? "/terms";
   return wrap(`
     <p>${esc(p.name)} 様</p>
@@ -94,6 +95,7 @@ export function bookingConfirmedHtml(p: {
         <p style="margin:0 0 6px">マイページからいつでも予約確認・キャンセルが可能です。</p>
         <p style="margin:0 0 6px"><a href="${esc(accountUrl)}">${esc(accountUrl)}</a></p>
       ` : ""}
+      <p style="margin:0 0 6px">ログインはこちら<br><a href="${esc(loginUrl)}">${esc(loginUrl)}</a></p>
       <p style="margin:0 0 6px">ご不明点は080-5830-4957 までお問い合わせください。</p>
       <p style="margin:0">キャンセルポリシーの確認はこちら<br><a href="${esc(termsUrl)}">${esc(termsUrl)}</a></p>
     </div>`);
