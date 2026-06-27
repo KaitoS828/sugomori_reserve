@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SUGOMORI favicon">
+  <rect width="64" height="64" rx="14" fill="#07090D"/>
+  <path d="M15 25h34v22H15V25Z" fill="#F2EFE9"/>
+  <path d="M20 30h24v17H20V30Z" fill="#111620"/>
+  <path d="M25 34h14v13H25V34Z" fill="#D46A2A"/>
+  <path d="M29 38h6v9h-6v-9Z" fill="#F2EFE9" opacity=".92"/>
+  <path d="M49 31h4v16h-4V31Z" fill="#C4B59D"/>
+  <path d="M44 13 46 18l5 2-5 2-2 5-2-5-5-2 5-2 2-5Z" fill="#F2EFE9"/>
+</svg>
