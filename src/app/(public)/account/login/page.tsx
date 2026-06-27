@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { login } from "../actions";
+import { LoginButton } from "./LoginButton";
 
 const field = "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#d46a2a]";
 
@@ -18,13 +19,14 @@ export default async function AccountLoginPage({
         <input type="hidden" name="next" value={next ?? ""} />
         <label className="block space-y-1">
           <span className="text-sm text-gray-700">メールアドレス</span>
-          <input type="email" name="email" required autoComplete="email" className={field} />
+          <input type="email" name="email" required autoComplete="email" placeholder="abcde@example.com" className={field} />
         </label>
         <label className="block space-y-1">
           <span className="text-sm text-gray-700">パスワード</span>
-          <input type="password" name="password" required autoComplete="current-password" className={field} />
+          <input type="password" name="password" required minLength={6} autoComplete="current-password" className={field} />
+          <span className="block text-xs text-gray-400">6文字以上で入力してください</span>
         </label>
-        <button className="w-full rounded-full bg-[#d46a2a] py-2.5 text-sm font-medium text-white hover:bg-[#d46a2a]">ログイン</button>
+        <LoginButton />
       </form>
       <p className="text-center text-sm text-gray-500">
         初めての方は <Link href="/account/signup" className="text-[#b8571f] hover:underline">会員登録</Link>
