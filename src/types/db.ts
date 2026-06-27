@@ -29,8 +29,14 @@ export type Customer = {
   auth_user_id: string | null;
   last_name: string | null;
   first_name: string | null;
+  last_name_kana: string | null;
+  first_name_kana: string | null;
   email: string | null;
   phone: string | null;
+  prefecture: string | null;
+  city: string | null;
+  address: string | null;
+  building: string | null;
   is_member: boolean;
   is_blacklisted: boolean;
   blacklist_reason: string | null;
@@ -119,6 +125,8 @@ export type Reservation = {
   status: ReservationStatus;
   payment_status: PaymentStatus;
   source: string;
+  check_in_time: string | null;
+  survey: string | null;
   gcal_event_id: string | null;
   note: string | null;
   cancel_category: string | null;
@@ -131,7 +139,7 @@ export type Reservation = {
 
 // JOIN 付き取得用
 export type ReservationWithRefs = Reservation & {
-  customers: Pick<Customer, "id" | "last_name" | "first_name"> | null;
+  customers: Pick<Customer, "id" | "last_name" | "first_name" | "last_name_kana" | "first_name_kana" | "email" | "phone" | "prefecture" | "city" | "address" | "building"> | null;
   room_types: Pick<RoomType, "id" | "name"> | null;
   rooms: Pick<Room, "id" | "name"> | null;
   plans: Pick<Plan, "id" | "name"> | null;
