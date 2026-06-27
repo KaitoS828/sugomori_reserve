@@ -119,6 +119,7 @@ export async function POST(req: NextRequest) {
           temporaryPassword,
           accountUrl,
           termsUrl,
+          isMember: !!cust?.auth_user_id || !!temporaryPassword,
         };
         if (cust?.email) {
           await sendEmail({ to: cust.email, subject: `【SUGOMORI】ご予約確定（${r.code}）`, html: bookingConfirmedHtml(info) }).catch(() => {});

@@ -65,7 +65,7 @@ const row = (k: string, v: string) =>
 
 export function bookingConfirmedHtml(p: {
   name: string; code: string; plan: string; checkIn: string; checkOut: string; nights: number; guests: number; amount: number;
-  requestNote?: string | null; accountEmail?: string | null; temporaryPassword?: string | null; accountUrl?: string; termsUrl?: string;
+  requestNote?: string | null; accountEmail?: string | null; temporaryPassword?: string | null; accountUrl?: string; termsUrl?: string; isMember?: boolean;
 }): string {
   const accountUrl = p.accountUrl ?? "/account";
   const termsUrl = p.termsUrl ?? "/terms";
@@ -90,8 +90,10 @@ export function bookingConfirmedHtml(p: {
     <p>当日のご来館を心よりお待ちしております。</p>
     <div style="margin-top:16px;padding:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-size:13px">
       <p style="margin:0 0 6px"><strong>📌 予約番号は必ず保存してください。</strong>確認・変更・キャンセルに必要です。</p>
-      <p style="margin:0 0 6px">会員（マイページ）の方は、マイページからいつでも確認・キャンセルが可能です。</p>
-      <p style="margin:0 0 6px"><a href="${esc(accountUrl)}">${esc(accountUrl)}</a></p>
+      ${p.isMember ? `
+        <p style="margin:0 0 6px">マイページからいつでも予約確認・キャンセルが可能です。</p>
+        <p style="margin:0 0 6px"><a href="${esc(accountUrl)}">${esc(accountUrl)}</a></p>
+      ` : ""}
       <p style="margin:0 0 6px">ご不明点は080-5830-4957 までお問い合わせください。</p>
       <p style="margin:0">キャンセルポリシーの確認はこちら<br><a href="${esc(termsUrl)}">${esc(termsUrl)}</a></p>
     </div>`);
