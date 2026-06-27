@@ -81,11 +81,15 @@ export function bookingConfirmedHtml(p: {
       ${row("お支払い金額", `¥${p.amount.toLocaleString()}`)}
       ${row("ご要望など", esc(p.requestNote ?? ""))}
     </table>
-    ${p.temporaryPassword && p.accountEmail ? `
+    ${p.accountEmail && (p.temporaryPassword || p.isMember) ? `
       <div style="margin:16px 0;padding:12px;background:#f0fdfa;border:1px solid #99f6e4;border-radius:8px;font-size:13px">
-        <p style="margin:0 0 6px"><strong>会員アカウントを自動作成しました。</strong></p>
+        <p style="margin:0 0 6px"><strong>会員アカウントで予約内容を確認できます。</strong></p>
         <p style="margin:0 0 4px">メールアドレス: ${esc(p.accountEmail)}</p>
-        <p style="margin:0">初期パスワード: <strong>${esc(p.temporaryPassword)}</strong></p>
+        ${p.temporaryPassword ? `
+          <p style="margin:0">初期パスワード: <strong>${esc(p.temporaryPassword)}</strong></p>
+        ` : `
+          <p style="margin:0">予約時に設定したパスワード、または登録済みのパスワードでログインできます。</p>
+        `}
       </div>
     ` : ""}
     <p>当日のご来館を心よりお待ちしております。</p>

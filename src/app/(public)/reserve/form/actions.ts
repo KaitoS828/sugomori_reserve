@@ -27,6 +27,8 @@ export async function startCheckout(formData: FormData) {
   const firstKana = String(formData.get("first_name_kana") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const email2 = String(formData.get("email2") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
+  const password2 = String(formData.get("password2") ?? "");
   const phone = String(formData.get("phone") ?? "").trim();
   const prefecture = String(formData.get("prefecture") ?? "").trim() || null;
   const city = String(formData.get("city") ?? "").trim() || null;
@@ -70,6 +72,12 @@ export async function startCheckout(formData: FormData) {
   const sessionClient = await createClient();
   const { data: { user } } = await sessionClient.auth.getUser();
 
+  if (!user) {
+    if (!password || password.length < 6) fail(planId, "パスワードは6文字以上で入力してください");
+    if (password !== password2) fail(planId, "パスワードが一致しません");
+    if (password.length > 128) fail(planId, "パスワードが長すぎます");
+  }
+
   // プラン・料金・客室タイプ
   const { data: plan } = await supabase
     .from("plans")
@@ -92,7 +100,7 @@ export async function startCheckout(formData: FormData) {
   let customerId: string;
   const { data: existing } = await supabase
     .from("customers")
-    .select("id")
+    .select("id, auth_user_id")
     .eq("email", email)
     .limit(1)
     .maybeSingle();
@@ -111,6 +119,35 @@ export async function startCheckout(formData: FormData) {
       .from("customers").insert(custFields).select("id").single();
     if (error || !created) fail(planId, "顧客情報の保存に失敗しました");
     customerId = created.id;
+  }
+
+  if (!user) {
+    if (existing?.auth_user_id) {
+      fail(planId, "このメールアドレスは登録済みです。ログインしてから予約してください");
+    }
+
+    const { data: createdAuth, error: authError } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        name: [lastName, firstName].filter(Boolean).join(" "),
+        auto_created_from_reservation: true,
+      },
+    });
+
+    if (authError || !createdAuth.user) {
+      const message = authError?.message.toLowerCase() ?? "";
+      if (message.includes("already")) {
+        fail(planId, "このメールアドレスは登録済みです。ログインしてから予約してください");
+      }
+      fail(planId, "会員アカウントの作成に失敗しました");
+    }
+
+    await supabase
+      .from("customers")
+      .update({ auth_user_id: createdAuth.user.id, is_member: true })
+      .eq("id", customerId);
   }
 
   // 仮予約作成

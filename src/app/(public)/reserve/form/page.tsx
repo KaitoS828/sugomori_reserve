@@ -143,6 +143,18 @@ export default async function ReserveFormPage({
             <span className={label}>メールアドレス（確認） <span className="text-red-500">*</span></span>
             <input type="email" name="email2" placeholder="abcde@example.com" required defaultValue={profile?.email ?? user?.email ?? ""} className={field} />
           </div>
+          {!user && (
+            <>
+              <div className="grid gap-2 md:grid-cols-[160px_1fr] md:items-center">
+                <span className={label}>パスワード <span className="text-red-500">*</span></span>
+                <input type="password" name="password" required minLength={6} autoComplete="new-password" className={field} />
+              </div>
+              <div className="grid gap-2 md:grid-cols-[160px_1fr] md:items-center">
+                <span className={label}>パスワード（確認） <span className="text-red-500">*</span></span>
+                <input type="password" name="password2" required minLength={6} autoComplete="new-password" className={field} />
+              </div>
+            </>
+          )}
           <div className="grid gap-2 md:grid-cols-[160px_1fr] md:items-center">
             <span className={label}>電話番号 <span className="text-red-500">*</span></span>
             <input name="phone" placeholder="0312345678" required defaultValue={profile?.phone ?? ""} className={field} />
