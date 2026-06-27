@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   ReservationWithRefs,
@@ -47,7 +48,7 @@ export default async function ReservationsPage({
   let q = supabase
     .from("reservations")
     .select(
-      "*, customers(id,last_name,first_name), room_types(id,name), rooms(id,name), plans(id,name)",
+      "*, customers(id,last_name,first_name,last_name_kana,first_name_kana,email,phone,prefecture,city,address,building), room_types(id,name), rooms(id,name), plans(id,name)",
     )
     .is("archived_at", null)
     .order("check_in", { ascending: false });
@@ -158,9 +159,10 @@ export default async function ReservationsPage({
                   <span className="font-mono text-xs text-gray-500">{r.code}</span>
                   <span className="font-medium text-gray-900">{custName(r.customers)}</span>
                 </span>
-                <span className="text-sm text-gray-500">
+                <span className="flex items-center gap-3 text-sm text-gray-500">
                   {r.check_in} → {r.check_out}（{r.nights}泊） / {r.room_types?.name ?? "—"}
                   {r.rooms ? ` ${r.rooms.name}` : ""} / ¥{r.amount.toLocaleString()}
+                  <Link href={`/admin/calendar?month=${r.check_in.slice(0,7)}&selected=${r.id}`} className="text-xs text-cyan-500 hover:underline shrink-0">カレンダーで見る</Link>
                 </span>
               </summary>
 
@@ -171,7 +173,56 @@ export default async function ReservationsPage({
                   <span>経路: {r.source}</span>
                   <span>支払: {r.payment_status}</span>
                 </div>
-                {r.note && <p className="text-sm text-gray-600">メモ: {r.note}</p>}
+
+                {/* 予約者詳細情報 */}
+                {r.customers && (
+                  <div className="rounded-lg border border-gray-100 bg-gray-50 p-4 text-sm">
+                    <p className="mb-2 font-medium text-gray-700">予約者情報</p>
+                    <dl className="grid grid-cols-1 gap-x-6 gap-y-1.5 md:grid-cols-2">
+                      <div className="flex gap-2">
+                        <dt className="w-28 shrink-0 text-gray-400">氏名</dt>
+                        <dd className="text-gray-900">{[r.customers.last_name, r.customers.first_name].filter(Boolean).join(" ") || "—"}</dd>
+                      </div>
+                      <div className="flex gap-2">
+                        <dt className="w-28 shrink-0 text-gray-400">氏名（カナ）</dt>
+                        <dd className="text-gray-900">{[r.customers.last_name_kana, r.customers.first_name_kana].filter(Boolean).join(" ") || "—"}</dd>
+                      </div>
+                      <div className="flex gap-2">
+                        <dt className="w-28 shrink-0 text-gray-400">メール</dt>
+                        <dd className="text-gray-900">{r.customers.email ? <a href={`mailto:${r.customers.email}`} className="text-cyan-600 hover:underline">{r.customers.email}</a> : "—"}</dd>
+                      </div>
+                      <div className="flex gap-2">
+                        <dt className="w-28 shrink-0 text-gray-400">電話</dt>
+                        <dd className="text-gray-900">{r.customers.phone ? <a href={`tel:${r.customers.phone}`} className="text-cyan-600 hover:underline">{r.customers.phone}</a> : "—"}</dd>
+                      </div>
+                      <div className="flex gap-2 md:col-span-2">
+                        <dt className="w-28 shrink-0 text-gray-400">住所</dt>
+                        <dd className="text-gray-900">
+                          {[r.customers.prefecture, r.customers.city, r.customers.address, r.customers.building].filter(Boolean).join(" ") || "—"}
+                        </dd>
+                      </div>
+                      {r.check_in_time && (
+                        <div className="flex gap-2">
+                          <dt className="w-28 shrink-0 text-gray-400">到着予定</dt>
+                          <dd className="text-gray-900">{r.check_in_time}</dd>
+                        </div>
+                      )}
+                      {r.survey && (
+                        <div className="flex gap-2 md:col-span-2">
+                          <dt className="w-28 shrink-0 text-gray-400">ご要望</dt>
+                          <dd className="whitespace-pre-wrap text-gray-900">{r.survey}</dd>
+                        </div>
+                      )}
+                      {r.note && (
+                        <div className="flex gap-2 md:col-span-2">
+                          <dt className="w-28 shrink-0 text-gray-400">その他連絡</dt>
+                          <dd className="whitespace-pre-wrap text-gray-900">{r.note}</dd>
+                        </div>
+                      )}
+                    </dl>
+                  </div>
+                )}
+
                 {r.status === "cancelled" && (r.cancel_category || r.cancel_reason) && (
                   <p className="text-sm text-red-300">
                     キャンセル理由: {r.cancel_category}
