@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Query Supabase to keep project active
         env:
+          # 修正: 以前は誤って nissei-reserve 側のプロジェクトを ping しており、
+          # SUGOMORI 自身は無操作のまま自動一時停止していた（2026-08-25 発覚・復旧）。
           SUPABASE_URL: https://kzfhhcnylqlsvnqetgep.supabase.co
           # anon（公開）キー。NEXT_PUBLIC_ でブラウザに配布されるキーと同一で、
           # 秘匿情報ではない（アクセス制御は RLS が担保）。keepalive 専用途。
