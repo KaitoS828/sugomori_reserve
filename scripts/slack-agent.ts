@@ -3,7 +3,7 @@
  * 公開URL不要。`npx tsx scripts/slack-agent.ts` で起動。
  *
  * 必要な環境変数（.env.local）:
- *   GROQ_API_KEY      : Groq APIキー（無料・OpenAI互換）
+ *   ANTHROPIC_API_KEY  : Claude APIキー
  *   SLACK_BOT_TOKEN    : xoxb-...（OAuth & Permissions のBot User OAuth Token）
  *   SLACK_APP_TOKEN    : xapp-...（Basic Information のApp-Level Token, scope: connections:write）
  *   （Supabase/Stripe等は既存のまま）
@@ -12,7 +12,7 @@
  *   - Socket Mode を有効化
  *   - Event Subscriptions で Bot Events に app_mention を追加
  *   - スコープ: app_mentions:read, chat:write
- *   - ボットをチャンネルに招待（/invite @SUGOMORI通知bot）
+ *   - ボットをチャンネルに招待（/invite @日靜通知bot）
  */
 process.loadEnvFile(".env.local");
 
@@ -51,5 +51,5 @@ socket.on("app_mention", async ({ event, ack }: { event: { text?: string; channe
 });
 
 socket.start().then(() => {
-  console.log("✅ Slackエージェント起動（Socket Mode）。チャンネルで @SUGOMORI通知bot にメンションしてください。");
+  console.log("✅ Slackエージェント起動（Socket Mode）。チャンネルで @日靜通知bot にメンションしてください。");
 });

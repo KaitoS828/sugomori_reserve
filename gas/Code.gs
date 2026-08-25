@@ -1,5 +1,5 @@
 /**
- * SUGOMORI予約システム ↔ Googleカレンダー 双方向同期（GAS Webアプリ）
+ * nissei予約システム ↔ Googleカレンダー 双方向同期（GAS Webアプリ）
  *
  * 【セットアップ】
  * 1. script.google.com で新規プロジェクト作成、このコードを貼り付け
@@ -21,7 +21,7 @@ function prop(key) {
 function calendar() {
   return CalendarApp.getCalendarById(prop('CALENDAR_ID') || 'primary');
 }
-const MARKER = '[SUGOMORI]'; // 当システムが作成したイベントの目印
+const MARKER = '[nissei]'; // 当システムが作成したイベントの目印
 
 // ---- Next.js → GAS（予約をカレンダーに反映）----
 function doPost(e) {
@@ -71,7 +71,7 @@ function json(obj) {
 }
 
 // ---- カレンダー → システム（手動で塞いだ枠を blocked_dates に反映）----
-// 時間主導トリガーで定期実行する。当システム作成イベント([SUGOMORI])は除外し、
+// 時間主導トリガーで定期実行する。当システム作成イベント([nissei])は除外し、
 // 手動予定の日付範囲を blocked_dates(reason='gcal-sync') として同期する。
 function syncBlockedDates() {
   const cal = calendar();
@@ -119,7 +119,7 @@ function setupLedger() {
   if (sid) {
     ss = SpreadsheetApp.openById(sid);
   } else {
-    ss = SpreadsheetApp.create('SUGOMORI 宿泊者台帳');
+    ss = SpreadsheetApp.create('日靜 宿泊者台帳');
     props.setProperty('SPREADSHEET_ID', ss.getId());
     ss.getActiveSheet().appendRow([
       '受付日時', '予約番号', '氏名', 'メール', '電話',
@@ -175,7 +175,7 @@ function backfillLedger() {
 }
 
 // ---- 宿泊者台帳スプレッドシートに自動追記 ----
-// SPREADSHEET_ID が未設定なら「SUGOMORI 宿泊者台帳」を自動作成して ID を保存する。
+// SPREADSHEET_ID が未設定なら「日靜 宿泊者台帳」を自動作成して ID を保存する。
 function appendToSheet(body) {
   try {
     const props = PropertiesService.getScriptProperties();
@@ -184,7 +184,7 @@ function appendToSheet(body) {
     if (sid) {
       ss = SpreadsheetApp.openById(sid);
     } else {
-      ss = SpreadsheetApp.create('SUGOMORI 宿泊者台帳');
+      ss = SpreadsheetApp.create('日靜 宿泊者台帳');
       sid = ss.getId();
       props.setProperty('SPREADSHEET_ID', sid);
       ss.getActiveSheet().appendRow([

@@ -1,3 +1,4 @@
+import { SubmitButton } from "@/components/SubmitButton";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { RoomType } from "@/types/db";
 import {
@@ -10,9 +11,9 @@ import {
 export const dynamic = "force-dynamic";
 
 const field =
-  "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-cyan-400";
+  "w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none focus:border-cyan-600";
 const btnPrimary =
-  "rounded-lg bg-cyan-500 px-4 py-2 text-sm font-medium text-gray-950 transition hover:bg-cyan-600";
+  "rounded-lg bg-cyan-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-cyan-700";
 
 export default async function RoomTypesPage() {
   const supabase = createAdminClient();
@@ -26,7 +27,7 @@ export default async function RoomTypesPage() {
     <div className="space-y-8">
       <header>
         <h1 className="text-2xl font-semibold text-gray-900">客室タイプ</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-gray-600">
           客室タイプ（定員・基本料金）の登録・編集
         </p>
       </header>
@@ -40,7 +41,7 @@ export default async function RoomTypesPage() {
         <input name="capacity" type="number" min={1} defaultValue={2} placeholder="定員" className={field} />
         <input name="base_price" type="number" min={0} defaultValue={0} placeholder="基本料金(円)" className={field} />
         <input name="sort_order" type="number" defaultValue={0} placeholder="表示順" className={field} />
-        <button className={btnPrimary}>追加</button>
+        <SubmitButton className={btnPrimary}>追加</SubmitButton>
         <input name="description" placeholder="説明（任意）" className={`${field} md:col-span-6`} />
       </form>
 
@@ -58,12 +59,12 @@ export default async function RoomTypesPage() {
               <span className="flex items-center gap-3">
                 <span className="font-medium text-gray-900">{rt.name}</span>
                 {!rt.is_active && (
-                  <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
+                  <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
                     無効
                   </span>
                 )}
               </span>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-gray-600">
                 定員 {rt.capacity}名 / ¥{rt.base_price.toLocaleString()}
               </span>
             </summary>
@@ -78,7 +79,7 @@ export default async function RoomTypesPage() {
                 <input name="capacity" type="number" min={1} defaultValue={rt.capacity} className={field} />
                 <input name="base_price" type="number" min={0} defaultValue={rt.base_price} className={field} />
                 <input name="sort_order" type="number" defaultValue={rt.sort_order} className={field} />
-                <button className={btnPrimary}>保存</button>
+                <SubmitButton className={btnPrimary}>保存</SubmitButton>
                 <input name="description" defaultValue={rt.description ?? ""} placeholder="説明" className={`${field} md:col-span-6`} />
               </form>
 
@@ -86,15 +87,15 @@ export default async function RoomTypesPage() {
                 <form action={toggleRoomTypeActive}>
                   <input type="hidden" name="id" value={rt.id} />
                   <input type="hidden" name="is_active" value={String(!rt.is_active)} />
-                  <button className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 transition hover:bg-gray-100">
+                  <SubmitButton className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 transition hover:bg-gray-100">
                     {rt.is_active ? "無効化" : "有効化"}
-                  </button>
+                  </SubmitButton>
                 </form>
                 <form action={deleteRoomType}>
                   <input type="hidden" name="id" value={rt.id} />
-                  <button className="rounded-lg border border-red-900 px-3 py-1.5 text-sm text-red-400 transition hover:bg-red-950/40">
+                  <SubmitButton className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-600 transition hover:bg-red-100">
                     削除
-                  </button>
+                  </SubmitButton>
                 </form>
               </div>
             </div>

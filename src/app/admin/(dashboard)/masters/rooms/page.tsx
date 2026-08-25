@@ -1,3 +1,4 @@
+import { SubmitButton } from "@/components/SubmitButton";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Room, RoomType } from "@/types/db";
 import { createRoom, updateRoom, toggleRoomActive, deleteRoom } from "./actions";
@@ -5,9 +6,9 @@ import { createRoom, updateRoom, toggleRoomActive, deleteRoom } from "./actions"
 export const dynamic = "force-dynamic";
 
 const field =
-  "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-cyan-400";
+  "w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none focus:border-cyan-600";
 const btnPrimary =
-  "rounded-lg bg-cyan-500 px-4 py-2 text-sm font-medium text-gray-950 transition hover:bg-cyan-600";
+  "rounded-lg bg-cyan-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-cyan-700";
 
 export default async function RoomsPage() {
   const supabase = createAdminClient();
@@ -24,13 +25,13 @@ export default async function RoomsPage() {
     <div className="space-y-8">
       <header>
         <h1 className="text-2xl font-semibold text-gray-900">客室</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-gray-600">
           客室（号室）と所属する客室タイプの登録
         </p>
       </header>
 
       {types.length === 0 ? (
-        <p className="text-sm text-amber-400">
+        <p className="text-sm text-amber-700">
           先に「客室タイプ」を登録してください。
         </p>
       ) : (
@@ -46,7 +47,7 @@ export default async function RoomsPage() {
               </option>
             ))}
           </select>
-          <button className={btnPrimary}>追加</button>
+          <SubmitButton className={btnPrimary}>追加</SubmitButton>
         </form>
       )}
 
@@ -63,12 +64,12 @@ export default async function RoomsPage() {
               <span className="flex items-center gap-3">
                 <span className="font-medium text-gray-900">{room.name}</span>
                 {!room.is_active && (
-                  <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
+                  <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
                     無効
                   </span>
                 )}
               </span>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-gray-600">
                 {typeName(room.room_type_id)}
               </span>
             </summary>
@@ -88,22 +89,22 @@ export default async function RoomsPage() {
                     </option>
                   ))}
                 </select>
-                <button className={btnPrimary}>保存</button>
+                <SubmitButton className={btnPrimary}>保存</SubmitButton>
               </form>
 
               <div className="flex gap-2">
                 <form action={toggleRoomActive}>
                   <input type="hidden" name="id" value={room.id} />
                   <input type="hidden" name="is_active" value={String(!room.is_active)} />
-                  <button className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 transition hover:bg-gray-100">
+                  <SubmitButton className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 transition hover:bg-gray-100">
                     {room.is_active ? "無効化" : "有効化"}
-                  </button>
+                  </SubmitButton>
                 </form>
                 <form action={deleteRoom}>
                   <input type="hidden" name="id" value={room.id} />
-                  <button className="rounded-lg border border-red-900 px-3 py-1.5 text-sm text-red-400 transition hover:bg-red-950/40">
+                  <SubmitButton className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-600 transition hover:bg-red-100">
                     削除
-                  </button>
+                  </SubmitButton>
                 </form>
               </div>
             </div>

@@ -13,10 +13,10 @@ jobs:
     steps:
       - name: Query Supabase to keep project active
         env:
-          SUPABASE_URL: https://kzfhhcnylqlsvnqetgep.supabase.co
+          SUPABASE_URL: https://eeltxyxknpezofrqvbgl.supabase.co
           # anon（公開）キー。NEXT_PUBLIC_ でブラウザに配布されるキーと同一で、
           # 秘匿情報ではない（アクセス制御は RLS が担保）。keepalive 専用途。
-          SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6ZmhoY255bHFsc3ZucWV0Z2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTg5NTYsImV4cCI6MjA5Nzg5NDk1Nn0.OwMmHAj-FQUpt0xJC4CtsucExtbNkGcPoLYBe-eazc4
+          SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlbHR4eXhrbnBlem9mcnF2YmdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0ODg0NTYsImV4cCI6MjA5NjA2NDQ1Nn0.mbKV9241ba2NwYNjnP5Kz77Qd7NK4B_BCBvKr5eA-8U
         run: |
           echo "Pinging Supabase REST API..."
           code=$(curl -sS -o /tmp/resp.txt -w "%{http_code}" \

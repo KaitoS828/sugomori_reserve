@@ -1,3 +1,4 @@
+import { SubmitButton } from "@/components/SubmitButton";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Customer } from "@/types/db";
 import {
@@ -6,13 +7,15 @@ import {
   toggleBlacklist,
   deleteCustomer,
 } from "./actions";
+import { DeleteForm } from "../_components/DeleteForm";
+import { SearchForm } from "./SearchForm";
 
 export const dynamic = "force-dynamic";
 
 const field =
-  "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-cyan-400";
+  "w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none focus:border-cyan-600";
 const btnPrimary =
-  "rounded-lg bg-cyan-500 px-4 py-2 text-sm font-medium text-gray-950 transition hover:bg-cyan-600";
+  "rounded-lg bg-cyan-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-cyan-700";
 
 const fullName = (c: Customer) =>
   [c.last_name, c.first_name].filter(Boolean).join(" ") || "（名前未登録）";
@@ -42,19 +45,9 @@ export default async function CustomersPage({
       <header className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">顧客</h1>
-          <p className="mt-1 text-sm text-gray-500">顧客の検索・登録・編集</p>
+          <p className="mt-1 text-sm text-gray-600">顧客の検索・登録・編集</p>
         </div>
-        <form className="flex gap-2">
-          <input
-            name="q"
-            defaultValue={q ?? ""}
-            placeholder="氏名・メール・電話で検索"
-            className={`${field} w-64`}
-          />
-          <button className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 transition hover:bg-gray-100">
-            検索
-          </button>
-        </form>
+        <SearchForm defaultValue={q ?? ""} />
       </header>
 
       <form
@@ -65,7 +58,7 @@ export default async function CustomersPage({
         <input name="first_name" placeholder="名" className={field} />
         <input name="email" type="email" placeholder="メール" className={field} />
         <input name="phone" placeholder="電話" className={field} />
-        <button className={btnPrimary}>顧客を追加</button>
+        <SubmitButton className={btnPrimary}>顧客を追加</SubmitButton>
         <input name="note" placeholder="メモ（任意）" className={`${field} md:col-span-5`} />
       </form>
 
@@ -84,17 +77,17 @@ export default async function CustomersPage({
               <span className="flex items-center gap-3">
                 <span className="font-medium text-gray-900">{fullName(c)}</span>
                 {c.is_blacklisted && (
-                  <span className="rounded bg-red-950 px-2 py-0.5 text-xs text-red-400">
+                  <span className="rounded bg-red-50 px-2 py-0.5 text-xs text-red-600">
                     ブラックリスト
                   </span>
                 )}
                 {c.is_member && (
-                  <span className="rounded bg-cyan-50 px-2 py-0.5 text-xs text-cyan-600">
+                  <span className="rounded bg-cyan-50 px-2 py-0.5 text-xs text-cyan-700">
                     会員
                   </span>
                 )}
               </span>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-gray-600">
                 {c.email ?? "—"} / 来店 {c.visit_count}回
               </span>
             </summary>
@@ -106,7 +99,7 @@ export default async function CustomersPage({
                 <input name="first_name" defaultValue={c.first_name ?? ""} placeholder="名" className={field} />
                 <input name="email" type="email" defaultValue={c.email ?? ""} placeholder="メール" className={field} />
                 <input name="phone" defaultValue={c.phone ?? ""} placeholder="電話" className={field} />
-                <button className={btnPrimary}>保存</button>
+                <SubmitButton className={btnPrimary}>保存</SubmitButton>
                 <input name="note" defaultValue={c.note ?? ""} placeholder="メモ" className={`${field} md:col-span-5`} />
               </form>
 
@@ -117,16 +110,15 @@ export default async function CustomersPage({
                   {!c.is_blacklisted && (
                     <input name="blacklist_reason" placeholder="理由（任意）" className={`${field} w-56`} />
                   )}
-                  <button className="rounded-lg border border-red-900 px-3 py-1.5 text-sm text-red-400 transition hover:bg-red-950/40">
+                  <SubmitButton className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-600 transition hover:bg-red-100">
                     {c.is_blacklisted ? "ブラックリスト解除" : "ブラックリストに追加"}
-                  </button>
+                  </SubmitButton>
                 </form>
-                <form action={deleteCustomer}>
-                  <input type="hidden" name="id" value={c.id} />
-                  <button className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-500 transition hover:bg-gray-100">
-                    削除
-                  </button>
-                </form>
+                <DeleteForm
+                  action={deleteCustomer}
+                  id={c.id}
+                  confirmMessage={`${fullName(c)} を削除します。\n過去の予約は残りますが、予約者名は表示されなくなります。よろしいですか？`}
+                />
               </div>
             </div>
           </details>

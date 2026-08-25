@@ -99,8 +99,8 @@ export default function HelpPage() {
     <div className="space-y-8">
       <header>
         <h1 className="text-2xl font-semibold text-gray-900">使い方・FAQ</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          SUGOMORI予約システムの管理画面ガイド
+        <p className="mt-1 text-sm text-gray-600">
+          nissei予約システムの管理画面ガイド
         </p>
       </header>
 
@@ -110,8 +110,8 @@ export default function HelpPage() {
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {SECTIONS.map((s) => (
             <div key={s.title} className="rounded-2xl border border-gray-200 bg-white p-5">
-              <h3 className="mb-2 font-medium text-cyan-600">{s.title}</h3>
-              <ul className="space-y-1.5 text-sm text-gray-600">
+              <h3 className="mb-2 font-medium text-cyan-700">{s.title}</h3>
+              <ul className="space-y-1.5 text-sm text-gray-700">
                 {s.items.map((it, i) => (
                   <li key={i} className="flex gap-2">
                     <span className="text-gray-600">•</span>
@@ -130,17 +130,17 @@ export default function HelpPage() {
         <div className="space-y-2">
           {FAQ.map((f, i) => (
             <details key={i} className="rounded-2xl border border-gray-200 bg-white p-5">
-              <summary className="cursor-pointer font-medium text-gray-100">Q. {f.q}</summary>
-              <p className="mt-2 text-sm text-gray-600">A. {f.a}</p>
+              <summary className="cursor-pointer font-medium text-gray-900">Q. {f.q}</summary>
+              <p className="mt-2 text-sm text-gray-700">A. {f.a}</p>
             </details>
           ))}
         </div>
       </section>
 
-      <section className="rounded-2xl border border-gray-200 bg-white p-5 text-sm text-gray-500">
+      <section className="rounded-2xl border border-gray-200 bg-white p-5 text-sm text-gray-600">
         <p>
           お困りの際は、開発者までお問い合わせください。公開サイトは{" "}
-          <Link href="/reserve" className="text-cyan-600 hover:underline">こちら</Link> から確認できます。
+          <Link href="/reserve" className="text-cyan-700 hover:underline">こちら</Link> から確認できます。
         </p>
       </section>
     </div>

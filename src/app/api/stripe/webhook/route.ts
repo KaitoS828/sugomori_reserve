@@ -2,21 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendEmail, bookingConfirmedHtml, ownerBookingHtml, ownerEmails } from "@/lib/email";
-import { notifyOwner, newBookingMessage } from "@/lib/notify";
+import { sendEmail, ownerBookingHtml, ownerEmails } from "@/lib/email";
+import { bookingGuideHtml, bookingGuideSubject } from "@/lib/booking-guide";
+import { GUIDE_SELECT, guideInput, type GuideFacility, type GuideRow } from "@/lib/booking-guide-server";
+import { ensureSecretCode, registerUrl } from "@/lib/guest-registration";
+import { notifyOwner, newBookingMessage, notifyFailure } from "@/lib/notify";
 import { gcalCreateEvent } from "@/lib/gcal";
-
-function generateTemporaryPassword(): string {
-  const alphabet = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const bytes = crypto.getRandomValues(new Uint8Array(12));
-  return Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join("");
-}
-
-function siteOrigin(req: NextRequest): string {
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return req.nextUrl.origin;
-}
+import { issueDoorPin } from "@/lib/smart-lock";
+import { releaseUnpaidHold } from "@/lib/hold";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -33,6 +26,22 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     const msg = err instanceof Error ? err.message : "signature error";
     return NextResponse.json({ error: `Webhook検証失敗: ${msg}` }, { status: 400 });
+  }
+
+  // 決済されないまま期限切れになったら在庫を解放する。
+  // これが無いと、決済画面で離脱した日程が塞がったままになる。
+  if (event.type === "checkout.session.expired") {
+    const session = event.data.object as Stripe.Checkout.Session;
+    const reservationId = session.metadata?.reservation_id;
+    if (reservationId) {
+      const released = await releaseUnpaidHold(
+        createAdminClient(),
+        reservationId,
+        "決済期限切れのため解放",
+      );
+      if (released) console.info(`未決済の仮予約を解放しました: ${reservationId}`);
+    }
+    return NextResponse.json({ received: true });
   }
 
   if (event.type === "checkout.session.completed") {
@@ -59,79 +68,26 @@ export async function POST(req: NextRequest) {
       // 通知（メール: ゲスト / Discord・Slack: オーナー）。失敗しても止めない。
       const { data: r } = await supabase
         .from("reservations")
-        .select("id, code, check_in, check_out, nights, num_guests, amount, survey, lookup_token, plans(name), customers(id, auth_user_id, last_name, first_name, email, phone)")
+        .select("code, check_in, check_out, nights, num_guests, amount, plans(name), customers(last_name, first_name, email, phone)")
         .eq("id", reservationId)
         .single();
       if (r) {
-        const cust = r.customers as unknown as {
-          id: string;
-          auth_user_id: string | null;
-          last_name: string | null;
-          first_name: string | null;
-          email: string | null;
-          phone: string | null;
-        } | null;
+        const cust = r.customers as unknown as { last_name: string | null; first_name: string | null; email: string | null; phone: string | null } | null;
         const plan = (r.plans as unknown as { name: string } | null)?.name ?? "ご宿泊";
         const name = [cust?.last_name, cust?.first_name].filter(Boolean).join(" ") || "お客";
-        const origin = siteOrigin(req);
-        const accountUrl = `${origin}/account`;
-        const termsUrl = `${origin}/terms`;
-        const lookupUrl = cust?.email
-          ? `${origin}/reserve/lookup?code=${encodeURIComponent(r.code as string)}&email=${encodeURIComponent(cust.email)}`
-          : undefined;
-        let temporaryPassword: string | null = null;
-
-        if (cust?.id && cust.email && !cust.auth_user_id) {
-          temporaryPassword = generateTemporaryPassword();
-          const { data: created, error: createUserError } = await supabase.auth.admin.createUser({
-            email: cust.email,
-            password: temporaryPassword,
-            email_confirm: true,
-            user_metadata: {
-              name,
-              reservation_code: r.code,
-              auto_created_from_reservation: true,
-            },
-          });
-
-          if (created.user) {
-            await supabase
-              .from("customers")
-              .update({ auth_user_id: created.user.id, is_member: true })
-              .eq("id", cust.id);
-          } else {
-            temporaryPassword = null;
-            if (!createUserError?.message.toLowerCase().includes("already")) {
-              console.error("Failed to auto-create member account", createUserError);
-            }
-            await supabase.from("customers").update({ is_member: true }).eq("id", cust.id);
-          }
-        } else if (cust?.id) {
-          await supabase.from("customers").update({ is_member: true }).eq("id", cust.id);
-        }
-
         const info = {
           code: r.code as string, name, plan,
           checkIn: r.check_in as string, checkOut: r.check_out as string,
           nights: r.nights as number, guests: r.num_guests as number, amount: r.amount as number,
-          requestNote: r.survey as string | null,
-          accountEmail: cust?.email ?? null,
-          temporaryPassword,
-          accountUrl,
-          termsUrl,
-          isMember: !!cust?.auth_user_id || !!temporaryPassword,
         };
-        if (cust?.email) {
-          await sendEmail({ to: cust.email, subject: `【SUGOMORI】ご予約確定（${r.code}）`, html: bookingConfirmedHtml(info) }).catch(() => {});
-        }
         await notifyOwner(newBookingMessage(info)).catch(() => {});
         // オーナーにもメール通知
         const owners = ownerEmails();
         if (owners.length) {
           await sendEmail({
             to: owners,
-            subject: `【SUGOMORI】新規予約 ${r.code}（${info.name}様）`,
-            html: ownerBookingHtml({ ...info, email: cust?.email ?? undefined, phone: cust?.phone ?? undefined, accountUrl, lookupUrl }),
+            subject: `【日靜】新規予約 ${r.code}（${info.name}様）`,
+            html: ownerBookingHtml({ ...info, email: cust?.email ?? undefined, phone: cust?.phone ?? undefined }),
           }).catch(() => {});
         }
 
@@ -144,6 +100,55 @@ export async function POST(req: NextRequest) {
         }).catch(() => null);
         if (eventId) {
           await supabase.from("reservations").update({ gcal_event_id: eventId }).eq("id", reservationId);
+        }
+
+        // ドアPINを発行してキーパッドに登録する。
+        // 鍵は滞在期間だけ有効なので、直前でなく確定時に作って構わない。
+        const { data: facility } = await supabase
+          .from("facility")
+          .select("check_in_time, check_out_time, phone")
+          .limit(1)
+          .maybeSingle();
+        await issueDoorPin({
+          reservationId,
+          checkIn: info.checkIn,
+          checkOut: info.checkOut,
+          checkInTime: (facility?.check_in_time as string | null)?.slice(0, 5),
+          checkOutTime: (facility?.check_out_time as string | null)?.slice(0, 5),
+          code: info.code,
+          guestName: info.name,
+        }).catch((e) => notifyFailure("ドアPINの発行", e, { 予約: info.code }));
+
+        // 案内メールは PIN を載せたいので、発行のあとに送る。
+        // 管理画面から送るものと同じ本文・同じ組み立てを使う。
+        if (cust?.email) {
+          const { data: guideRow } = await supabase
+            .from("reservations")
+            .select(GUIDE_SELECT)
+            .eq("id", reservationId)
+            .maybeSingle();
+          const secret = await ensureSecretCode(supabase, reservationId);
+          const host = req.headers.get("host");
+          const origin = host ? `https://${host}` : "https://reserve.gh-nissei.jp";
+          const subject = bookingGuideSubject(info.name);
+          const lookupUrl = `${origin}/reserve/lookup?code=${encodeURIComponent(info.code)}&email=${encodeURIComponent(cust.email)}`;
+          const html = bookingGuideHtml(
+            guideInput(guideRow as unknown as GuideRow, facility as GuideFacility, registerUrl(origin, secret), lookupUrl),
+          );
+          const ok = await sendEmail({ to: cust.email, subject, html }).catch(() => false);
+          if (!ok) await notifyFailure("予約時メールの自動送信", "送信に失敗", { 予約: info.code, 宛先: cust.email });
+
+          // 管理画面の送信履歴と同じ場所に残す。送れたかどうかを後から確認できる。
+          await supabase.from("guest_message_deliveries").insert({
+            reservation_id: reservationId,
+            message_type: "booking_guide",
+            channel: "email",
+            sent_to: cust.email,
+            subject,
+            status: ok ? "sent" : "failed",
+            error: ok ? null : "決済確定時の自動送信に失敗しました",
+            sent_at: new Date().toISOString(),
+          });
         }
       }
     }
