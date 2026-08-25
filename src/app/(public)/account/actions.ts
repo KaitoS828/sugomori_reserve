@@ -33,10 +33,25 @@ export async function signup(formData: FormData) {
 export async function login(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const next = String(formData.get("next") ?? "").trim();
+  const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "";
+  const params = new URLSearchParams();
+  if (safeNext) params.set("next", safeNext);
+  const fail = (message: string): never => {
+    params.set("error", message);
+    redirect(`/account/login?${params.toString()}`);
+  };
+
+  if (!email) fail("メールアドレスを入力してください");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) fail("メールアドレスの形式が正しくありません");
+  if (!password) fail("パスワードを入力してください");
+  if (password.length < 6) fail("パスワードは6文字以上で入力してください");
+
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) redirect(`/account/login?error=${encodeURIComponent(error.message)}`);
-  redirect("/account");
+  // Supabase の生メッセージは英語なので、そのまま出さず一律の日本語に寄せる
+  if (error) fail("メールアドレスまたはパスワードが違います");
+  redirect(safeNext || "/account");
 }
 
 export async function logout() {

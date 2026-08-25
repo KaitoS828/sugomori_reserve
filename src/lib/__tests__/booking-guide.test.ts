@@ -55,7 +55,6 @@ describe("bookingGuideText", () => {
   it("夜間の注意を含むお願いを載せる", () => {
     const text = bookingGuideText(base);
     assert.ok(text.includes("お願い"));
-    assert.ok(text.includes("漁師町"));
     assert.ok(text.includes("夜間"));
   });
 

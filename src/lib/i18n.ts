@@ -131,6 +131,8 @@ type Dict = {
     prefecturePlaceholder: string; cityPlaceholder: string;
     addressPlaceholder: string; buildingPlaceholder: string;
     addressHint: string;
+    memberTitle: string; memberLead: string;
+    password: string; passwordConfirm: string; passwordHint: string;
     checkInTime: string;
     survey: string; surveyPlaceholder: string;
     contact: string; contactPlaceholder: string;
@@ -263,6 +265,10 @@ const ja: Dict = {
     prefecturePlaceholder: "北海道", cityPlaceholder: "広尾郡大樹町",
     addressPlaceholder: "山海谷町1-3-11", buildingPlaceholder: "谷海山ビル3階",
     addressHint: "",
+    memberTitle: "会員登録（任意）",
+    memberLead: "パスワードを設定すると会員登録され、マイページから予約の確認ができます。設定しない場合はゲストのままご予約いただけます。",
+    password: "パスワード", passwordConfirm: "パスワード（確認）",
+    passwordHint: "6文字以上。空欄のままでも予約できます。",
     checkInTime: "チェックイン予定時刻",
     survey: "ご要望・アンケート", surveyPlaceholder: "・宿泊の目的\n・ご要望など",
     contact: "連絡事項", contactPlaceholder: "連絡事項がございましたらご入力ください",
@@ -286,6 +292,11 @@ const ja: Dict = {
       reservation_failed: "予約の作成に失敗しました",
       agree_required: "キャンセルポリシーを含む利用規約への同意が必要です",
       checkout_failed: "決済セッションの作成に失敗しました",
+      password_short: "パスワードは6文字以上で入力してください",
+      password_mismatch: "パスワードが一致しません",
+      password_too_long: "パスワードが長すぎます",
+      email_registered: "このメールアドレスは登録済みです。ログインしてから予約してください",
+      account_create_failed: "会員アカウントの作成に失敗しました",
       generic: "処理できませんでした。お手数ですが最初からお試しください",
     },
     errMinGuests: (n) => `このプランは${n}名以上でご予約ください`,
@@ -478,6 +489,10 @@ const en: Dict = {
     prefecturePlaceholder: "California", cityPlaceholder: "San Francisco",
     addressPlaceholder: "1234 Market St, USA", buildingPlaceholder: "Apt 5B",
     addressHint: "Please include your country in the street address.",
+    memberTitle: "Create an account (optional)",
+    memberLead: "Set a password to create an account and manage your bookings from My Page. You can also book as a guest.",
+    password: "Password", passwordConfirm: "Password (confirm)",
+    passwordHint: "At least 6 characters. Leave blank to book as a guest.",
     checkInTime: "Estimated arrival time",
     survey: "Requests and comments", surveyPlaceholder: "・Purpose of your stay\n・Any requests",
     contact: "Anything else we should know", contactPlaceholder: "Let us know if there is anything else",
@@ -501,6 +516,11 @@ const en: Dict = {
       reservation_failed: "We could not create the booking.",
       agree_required: "Please agree to the terms of use, including the cancellation policy.",
       checkout_failed: "We could not start the payment session.",
+      password_short: "Your password must be at least 6 characters.",
+      password_mismatch: "The passwords do not match.",
+      password_too_long: "That password is too long.",
+      email_registered: "That email address is already registered. Please sign in before booking.",
+      account_create_failed: "We could not create your account.",
       generic: "We could not complete that. Please start again.",
     },
     errMinGuests: (n) => `This plan requires at least ${n} guests.`,

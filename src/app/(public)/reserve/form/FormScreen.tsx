@@ -2,6 +2,7 @@ import { SubmitButton } from "@/components/SubmitButton";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { calcPrice, nightlyRateForGuests, type Discount, type GuestPrices } from "@/lib/pricing";
 import { eachNight } from "@/lib/availability";
 import { dict, localePath, type Locale } from "@/lib/i18n";
@@ -45,6 +46,9 @@ export async function FormScreen({
     .eq("id", planId)
     .single();
   if (!plan) notFound();
+
+  // ログイン済みの会員には会員登録欄を出さない
+  const { data: { user } } = await (await createClient()).auth.getUser();
 
   const pp = (plan.plan_prices ?? [])[0];
   const pricePerNight = pp?.price_per_night ?? 0;
@@ -127,6 +131,25 @@ export async function FormScreen({
             <span className={label}>{t.emailConfirm} {req}</span>
             <input type="email" name="email2" placeholder="abcde@example.com" required className={field} />
           </div>
+          {!user && (
+            <div className="space-y-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <div>
+                <p className={label}>{t.memberTitle}</p>
+                <p className="mt-1 text-xs leading-5 text-gray-500">{t.memberLead}</p>
+              </div>
+              <div className="grid gap-2 md:grid-cols-[160px_1fr] md:items-center">
+                <span className={label}>{t.password}</span>
+                <div>
+                  <input type="password" name="password" minLength={6} autoComplete="new-password" className={field} />
+                  <span className="mt-1 block text-xs text-gray-400">{t.passwordHint}</span>
+                </div>
+              </div>
+              <div className="grid gap-2 md:grid-cols-[160px_1fr] md:items-center">
+                <span className={label}>{t.passwordConfirm}</span>
+                <input type="password" name="password2" minLength={6} autoComplete="new-password" className={field} />
+              </div>
+            </div>
+          )}
           <div className="grid gap-2 md:grid-cols-[160px_1fr] md:items-center">
             <span className={label}>{t.phone} {req}</span>
             <input name="phone" placeholder={t.phonePlaceholder} required className={field} />
