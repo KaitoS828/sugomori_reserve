@@ -14,7 +14,7 @@ jobs:
       - name: 取り込みを実行
         run: |
           code=$(curl -s -o /tmp/out.json -w "%{http_code}" \
-            -X POST "https://reserve.gh-nissei.jp/api/ical/import" \
+            -X POST "https://sugomori-hokkaido.jp/api/ical/import" \
             -H "x-cron-secret: ${{ secrets.CRON_SECRET }}")
           echo "HTTP $code"
           cat /tmp/out.json
@@ -25,7 +25,7 @@ jobs:
       - name: 未決済の仮予約を解放
         run: |
           code=$(curl -s -o /tmp/hold.json -w "%{http_code}" \
-            -X POST "https://reserve.gh-nissei.jp/api/cron/release-holds" \
+            -X POST "https://sugomori-hokkaido.jp/api/cron/release-holds" \
             -H "x-cron-secret: ${{ secrets.CRON_SECRET }}")
           echo "HTTP $code"
           cat /tmp/hold.json

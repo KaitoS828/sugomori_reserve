@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* nissei予約システム ダークテーマ（bg-gray-950 + シアンアクセント） */
+/* SUGOMORI予約システム ダークテーマ（bg-gray-950 + シアンアクセント） */
 :root {
   --background: #030712;      /* gray-950 */
   --foreground: #e5e7eb;      /* gray-200 */

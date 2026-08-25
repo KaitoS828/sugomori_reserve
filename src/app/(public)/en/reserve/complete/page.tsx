@@ -4,7 +4,7 @@ import { CompleteScreen } from "@/app/(public)/reserve/complete/CompleteScreen";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: { absolute: "Booking confirmed | Nissei" },
+  title: { absolute: "Booking confirmed | SUGOMORI" },
   robots: { index: false, follow: false },
 };
 

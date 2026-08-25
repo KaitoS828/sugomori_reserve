@@ -1,4 +1,4 @@
-// smart-checkin-app-v2 の Supabase から nissei-reserve の Supabase へデータを移す。
+// smart-checkin-app-v2 の Supabase から sugomori-reserve の Supabase へデータを移す。
 //
 // 旧アプリの reservations 1行は、こちらでは4テーブルに分かれる:
 //   reservations（予約本体）/ reservation_checkins（チェックイン）
@@ -25,7 +25,7 @@ function readEnv(path) {
 }
 
 const src = readEnv("/Users/sekimotokaito/dev/active/smart-checkin-app-v2/.env.local");
-const dst = readEnv("/Users/sekimotokaito/dev/active/nissei-reserve/.env.local");
+const dst = readEnv("/Users/sekimotokaito/dev/active/sugomori-reserve/.env.local");
 
 function api(env) {
   const base = env.NEXT_PUBLIC_SUPABASE_URL;
@@ -152,7 +152,7 @@ async function main() {
         payment_status: "unpaid",
         source: "admin",
         gcal_event_id: r.google_calendar_event_id ?? null,
-        // 別物件の過去分なので、日靜のカレンダー・一覧・集計には出さない
+        // 別物件の過去分なので、SUGOMORIのカレンダー・一覧・集計には出さない
         archived_at: new Date().toISOString(),
         note: note(r.id),
       }),

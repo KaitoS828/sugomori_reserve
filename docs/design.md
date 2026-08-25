@@ -1,6 +1,6 @@
-# nissei予約システム 詳細設計書
+# SUGOMORI予約システム 詳細設計書
 
-> RESERVA を置き換える自作予約・決済システム。対象は **広尾町のサウナ宿（nissei）1施設専用**。
+> RESERVA を置き換える自作予約・決済システム。対象は **広尾町のサウナ宿（sugomori）1施設専用**。
 > 月額維持費ゼロ・全機能フル開放・広告なしを目標とする。
 
 最終更新: 2026-06-03
@@ -58,7 +58,7 @@
 | メッセージ | **LINE Messaging API**（Push）+ メール（Resend or Supabase SMTP） |
 | 定期実行 | Vercel Cron もしくは Supabase Scheduled Functions / GASトリガー |
 | ホスティング | Vercel（フロント+API）、Supabase（マネージドDB） |
-| ポート（ローカル） | フロント 3033（3030 は nissei-reserve-integrated と衝突するため変更） |
+| ポート（ローカル） | フロント 3033（3030 は sugomori-reserve-integrated と衝突するため変更） |
 
 > 別バックエンド（FastAPI）は立てない。Next.js の Route Handlers + Supabase で完結させ、個人運用の保守コストを最小化する。
 
@@ -86,7 +86,7 @@
    └─────────────────┘    └──────────────────┘
 ```
 
-既存の静的サイト `nissei`（広尾町のサウナ宿HP）は公開サイトとして残し、「予約する」ボタンから本システムへ遷移させる。
+既存の静的サイト `sugomori`（広尾町のサウナ宿HP）は公開サイトとして残し、「予約する」ボタンから本システムへ遷移させる。
 
 ---
 
@@ -132,7 +132,7 @@
 -- 施設情報（単一施設なので1行運用 or key-value）
 create table facility (
   id uuid primary key default gen_random_uuid(),
-  name text not null,            -- 例: nissei サウナ宿
+  name text not null,            -- 例: sugomori サウナ宿
   address text,
   phone text,
   check_in_time time default '15:00',
@@ -381,7 +381,7 @@ create table surveys (        -- アンケート/NPS
 ## 11. ディレクトリ構成（想定）
 
 ```
-nissei-reserve/
+sugomori-reserve/
 ├─ docs/
 │  └─ design.md            ← 本書
 ├─ src/
@@ -434,4 +434,4 @@ RESEND_API_KEY=
 3. 連泊を許可するか、1泊単位か。
 4. 会員機能（リピーター割引・ログイン）を Phase1 から入れるか Phase4 か。
 5. 通知チャネルの優先（LINE優先 / メール優先 / 両方）。
-6. 既存 `nissei` サイトと同一ドメインにするか、サブドメイン（例: reserve.nissei...）か。
+6. 既存 `sugomori` サイトと同一ドメインにするか、サブドメイン（例: reserve.sugomori...）か。

@@ -24,17 +24,17 @@ export default async function SiteSettingsPage() {
   ]);
 
   const settings = (facility?.settings as FacilitySettings) ?? {};
-  const heroTitle = settings.hero_title ?? "日靜 — ご宿泊予約";
-  const heroSub = settings.hero_sub ?? "PRIVATE VILLA & SAUNA";
+  const heroTitle = settings.hero_title ?? "SUGOMORI — ご宿泊予約";
+  const heroSub = settings.hero_sub ?? "TRAIL HOUSE SUGOMORI";
   const heroDescription =
     settings.hero_description ??
-    "北海道広尾町の自然と静寂に包まれた、1日1組限定の完全プライベート空間。\n専用の薪サウナ「KOBU SAUNA」とともに、特別なご滞在をお愉しみください。";
+    "北海道大樹町の自然と静寂に包まれた、1日1組限定の完全プライベート空間。\n光害のない満天の星の下、焚き火とBBQで特別なご滞在をお愉しみください。";
 
   const heroImages = Array.isArray(settings.hero_images) ? (settings.hero_images as string[]) : [];
 
   const features = Array.isArray(settings.features)
     ? (settings.features as string[])
-    : ["プライベートサウナ", "一棟貸し", "オンライン決済", "事前チェックイン"];
+    : ["焚き火・BBQ", "一棟貸し", "オンライン決済", "事前チェックイン"];
 
   type PlanRow = {
     id: string;
@@ -55,7 +55,7 @@ export default async function SiteSettingsPage() {
   }));
 
   const initialData = {
-    name: facility?.name ?? "日靜",
+    name: facility?.name ?? "SUGOMORI",
     phone: facility?.phone ?? "",
     address: facility?.address ?? "",
     heroTitle,

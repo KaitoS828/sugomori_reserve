@@ -207,7 +207,7 @@ type Dict = {
 };
 
 const ja: Dict = {
-  site: { name: "一棟貸し宿「日靜」", about: "About Us", terms: "利用規約", privacy: "プライバシーポリシー", faq: "よくある質問" },
+  site: { name: "一棟貸し宿「SUGOMORI」", about: "About Us", terms: "利用規約", privacy: "プライバシーポリシー", faq: "よくある質問" },
   nav: { reserve: "予約", lookup: "予約照会", checkin: "チェックイン", account: "マイページ", login: "ログイン" },
   reserve: {
     location: "所在地", contact: "お問い合わせ",
@@ -220,7 +220,7 @@ const ja: Dict = {
     legendSelected: "選択中", legendAvailable: "空室あり", legendFull: "満室・予約不可",
     in: "IN", out: "OUT", nightCount: (n) => `${n}泊`,
     guestsLabel: "人数", guestOption: (n) => `${n}名`, guestsUpTo: (n) => `${n}名まで`, clear: "クリア",
-    roomLabel: "日靜（1日1組限定）",
+    roomLabel: "SUGOMORI（1日1組限定）",
     guestRangeNote: (min, max) => `${min}名〜${max}名でご利用可`,
     perPersonFrom: (yen) => `¥${yen}/人〜`,
     minGuestsNotice: (n) => `このプランは最低${n}名からです`,
@@ -260,7 +260,7 @@ const ja: Dict = {
     phone: "電話番号", phonePlaceholder: "0312345678",
     prefecture: "都道府県（自宅）", city: "市区町村（自宅）",
     address: "番地（自宅）", building: "建物名（自宅）",
-    prefecturePlaceholder: "北海道", cityPlaceholder: "広尾郡広尾町",
+    prefecturePlaceholder: "北海道", cityPlaceholder: "広尾郡大樹町",
     addressPlaceholder: "山海谷町1-3-11", buildingPlaceholder: "谷海山ビル3階",
     addressHint: "",
     checkInTime: "チェックイン予定時刻",
@@ -345,10 +345,10 @@ const ja: Dict = {
     },
   },
   email: {
-    brand: "一棟貸し宿「日靜」",
-    footer: "北海道広尾郡広尾町音調津733番地 日靜 / ☎ 070-1251-6275",
+    brand: "一棟貸し宿「SUGOMORI」",
+    footer: "北海道広尾郡大樹町下大樹 SUGOMORI / ☎ 080-5830-4957",
     honorific: (name) => `${name} 様`,
-    cancelSubject: (code) => `【日靜】キャンセル受付（${code}）`,
+    cancelSubject: (code) => `【SUGOMORI】キャンセル受付（${code}）`,
     cancelLead: (code) => `ご予約（予約番号 ${code}）のキャンセルを承りました。`,
     refundLabel: "返金額",
     cancelClosing: "返金は Stripe を通じて数日内に処理されます。またのご利用をお待ちしております。",
@@ -417,7 +417,7 @@ const ja: Dict = {
 };
 
 const en: Dict = {
-  site: { name: "Nissei — private house & sauna", about: "About Us", terms: "Terms", privacy: "Privacy", faq: "FAQ" },
+  site: { name: "SUGOMORI — trail house", about: "About Us", terms: "Terms", privacy: "Privacy", faq: "FAQ" },
   nav: { reserve: "Book", lookup: "Find booking", checkin: "Check-in", account: "My page", login: "Log in" },
   reserve: {
     location: "Address", contact: "Contact",
@@ -562,10 +562,10 @@ const en: Dict = {
     },
   },
   email: {
-    brand: "Nissei — private house & sauna",
-    footer: "733 Otsunai, Hiroo-cho, Hiroo-gun, Hokkaido 089-2661, Japan / ☎ +81 70-1251-6275",
+    brand: "SUGOMORI — trail house",
+    footer: "Shimotaiki, Taiki-cho, Hiroo-gun, Hokkaido, Japan / ☎ +81 80-5830-4957",
     honorific: (name) => `Dear ${name},`,
-    cancelSubject: (code) => `[Nissei] Your booking is cancelled (${code})`,
+    cancelSubject: (code) => `[SUGOMORI] Your booking is cancelled (${code})`,
     cancelLead: (code) => `We have cancelled your booking (booking number ${code}).`,
     refundLabel: "Refund amount",
     cancelClosing:

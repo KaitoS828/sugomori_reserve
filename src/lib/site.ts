@@ -2,31 +2,29 @@
 // 予約システムの説明ではなく「宿の紹介」を書く。検索した人が読むのはこちら。
 
 export const SITE = {
-  name: "一棟貸し宿「日靜」",
-  shortName: "日靜（NISSEI）",
-  tagline: "北海道・広尾町のプライベートサウナ付き一棟貸し宿",
+  name: "一棟貸し宿「SUGOMORI」",
+  shortName: "トレイルハウス SUGOMORI",
+  tagline: "北海道・大樹町の焚き火とBBQを楽しむ一棟貸しトレイルハウス",
   description:
-    "北海道十勝・広尾町音調津の一棟貸し宿「日靜」。1日1組限定で、貸切サウナ「KOBU SAUNA」を独り占め。素泊まり・日帰り利用も承ります。",
+    "北海道十勝・大樹町下大樹の一棟貸し宿「SUGOMORI」。1日1組限定で1LDKのトレイルハウスを貸切。光害のない満天の星の下、焚き火・BBQをお愉しみいただけます。",
   address: {
-    postalCode: "089-2661",
     region: "北海道",
-    locality: "広尾郡広尾町",
-    street: "音調津733番地",
-    full: "北海道広尾郡広尾町音調津733番地",
+    locality: "広尾郡大樹町",
+    street: "下大樹",
+    full: "北海道広尾郡大樹町下大樹",
     // 英語ページ用。DB の facility.address は日本語表記のみなので、
     // 海外のお客様が地図アプリに入れられる形をこちらで持つ。
-    fullEn: "733 Otsunai, Hiroo-cho, Hiroo-gun, Hokkaido 089-2661, Japan",
+    fullEn: "Shimotaiki, Taiki-cho, Hiroo-gun, Hokkaido, Japan",
   },
-  phone: "070-1251-6275",
-  email: "info@gh-nissei.jp",
+  phone: "080-5830-4957",
   checkIn: "15:00",
   checkOut: "10:00",
-  maxGuests: 8,
+  maxGuests: 2,
 } as const;
 
 export function siteUrl(): string {
   const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
-  return fromEnv || "https://reserve.gh-nissei.jp";
+  return fromEnv || "https://sugomori-hokkaido.jp";
 }
 
 /** 宿泊施設の構造化データ。Google に「宿」として理解させる。 */
@@ -36,15 +34,13 @@ export function lodgingJsonLd(): string {
     "@type": "LodgingBusiness",
     name: SITE.name,
     // 英語で検索されたときに宿名が結び付くようにする
-    alternateName: "Nissei — private house with sauna, Hiroo, Hokkaido",
+    alternateName: "SUGOMORI — trail house in Taiki, Hokkaido",
     knowsLanguage: ["ja", "en"],
     description: SITE.description,
     url: siteUrl(),
     telephone: SITE.phone,
-    email: SITE.email,
     address: {
       "@type": "PostalAddress",
-      postalCode: SITE.address.postalCode,
       addressRegion: SITE.address.region,
       addressLocality: SITE.address.locality,
       streetAddress: SITE.address.street,
@@ -56,7 +52,7 @@ export function lodgingJsonLd(): string {
     smokingAllowed: false,
     numberOfRooms: 1,
     amenityFeature: [
-      "貸切サウナ",
+      "焚き火・BBQ",
       "無料Wi-Fi",
       "駐車場",
       "キッチン",

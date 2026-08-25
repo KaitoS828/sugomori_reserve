@@ -4,7 +4,7 @@ import { ReceiptScreen } from "@/app/(public)/reserve/receipt/ReceiptScreen";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: { absolute: "Receipt | Nissei" },
+  title: { absolute: "Receipt | SUGOMORI" },
   robots: { index: false, follow: false },
 };
 

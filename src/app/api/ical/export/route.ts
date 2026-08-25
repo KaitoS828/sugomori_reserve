@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
   return new NextResponse(buildIcs(stays), {
     headers: {
       "Content-Type": "text/calendar; charset=utf-8",
-      "Content-Disposition": 'inline; filename="nissei.ics"',
+      "Content-Disposition": 'inline; filename="sugomori.ics"',
       "Cache-Control": "no-store",
     },
   });

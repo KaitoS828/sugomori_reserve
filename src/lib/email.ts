@@ -29,7 +29,7 @@ export async function sendEmail({ to, subject, html }: SendArgs): Promise<boolea
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: `一棟貸し宿「日靜」 <${from}>`,
+            from: `一棟貸し宿「SUGOMORI」 <${from}>`,
             to: addr,
             subject,
             html,
@@ -99,7 +99,7 @@ export function bookingConfirmedHtml(p: {
       <p style="margin:0 0 6px"><strong>📌 予約番号は必ず保存してください。</strong>確認・変更・キャンセルに必要です。</p>
       <p style="margin:0 0 6px">🔑 会員（マイページ）の方は、マイページからいつでも確認・<strong>キャンセル</strong>が可能です。</p>
       ${p.checkinUrl ? `<p style="margin:0 0 6px">🚪 玄関の<strong>ドアコード</strong>は <a href="${esc(p.checkinUrl)}" style="color:#0f766e">チェックインページ</a> でご確認いただけます（予約番号とこのメールアドレスが必要です）。</p>` : ""}
-      <p style="margin:0">📞 ご不明点は <strong>070-1251-6275</strong> までお問い合わせください。</p>
+      <p style="margin:0">📞 ご不明点は <strong>080-5830-4957</strong> までお問い合わせください。</p>
     </div>`);
 }
 

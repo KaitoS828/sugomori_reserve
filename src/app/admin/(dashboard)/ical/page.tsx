@@ -64,10 +64,10 @@ export default async function IcalPage({
 
       {/* 取り込みだけでは片方向。自社の予約を相手先に伝えないと逆向きの二重予約は防げない */}
       <section className="space-y-2 rounded-2xl border border-gray-200 bg-white p-5">
-        <h2 className="font-medium text-gray-900">日靜のカレンダーを配信する</h2>
+        <h2 className="font-medium text-gray-900">SUGOMORIのカレンダーを配信する</h2>
         <p className="text-sm text-gray-600">
           下記URLを Airbnb 等の「カレンダーを接続（インポート）」に登録すると、
-          日靜で埋まっている日が相手先でも予約不可になります。取り込みだけでは
+          SUGOMORIで埋まっている日が相手先でも予約不可になります。取り込みだけでは
           「自社の予約を相手先で売られる」事故は防げません。
         </p>
         {exportUrl ? (

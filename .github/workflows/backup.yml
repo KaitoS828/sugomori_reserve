@@ -33,7 +33,7 @@ jobs:
       - name: 保管する
         uses: actions/upload-artifact@v4
         with:
-          name: nissei-backup-${{ github.run_id }}
+          name: sugomori-backup-${{ github.run_id }}
           path: backup/
           retention-days: 90
 

@@ -4,7 +4,7 @@ import { FormScreen } from "@/app/(public)/reserve/form/FormScreen";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: { absolute: "Your details | Nissei" },
+  title: { absolute: "Your details | SUGOMORI" },
   robots: { index: false, follow: false },
 };
 

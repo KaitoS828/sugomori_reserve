@@ -4,7 +4,7 @@ import { CancelDoneScreen } from "@/app/(public)/reserve/cancel/done/CancelDoneS
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: { absolute: "Booking cancelled | Nissei" },
+  title: { absolute: "Booking cancelled | SUGOMORI" },
   robots: { index: false, follow: false },
 };
 

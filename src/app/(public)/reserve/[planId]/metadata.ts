@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Locale } from "@/lib/i18n";
 
-const EN_SUFFIX = "Nissei — private house with sauna, Hiroo, Hokkaido";
+const EN_SUFFIX = "SUGOMORI — trail house in Taiki, Hokkaido";
 
 /** プラン詳細の title と hreflang。日英で同じ関数を使う。 */
 export async function planMetadata(planId: string, locale: Locale): Promise<Metadata> {

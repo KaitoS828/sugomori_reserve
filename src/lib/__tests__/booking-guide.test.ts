@@ -12,23 +12,23 @@ const base: BookingGuideInput = {
   numGuests: 2,
   planName: "素泊まりプラン",
   doorPin: "129053",
-  registerUrl: "https://reserve.gh-nissei.jp/register/abc123",
-  lookupUrl: "https://reserve.gh-nissei.jp/reserve/lookup?code=R-20260809-JHDV&email=test%40example.com",
-  phone: "070-1251-6275",
+  registerUrl: "https://sugomori-hokkaido.jp/register/abc123",
+  lookupUrl: "https://sugomori-hokkaido.jp/reserve/lookup?code=R-20260809-JHDV&email=test%40example.com",
+  phone: "080-5830-4957",
 };
 
 describe("bookingGuideSubject", () => {
   it("お名前を件名に入れる", () => {
-    assert.equal(bookingGuideSubject("神部 葵"), "【日靜】ご宿泊のご案内（神部 葵様）");
+    assert.equal(bookingGuideSubject("神部 葵"), "【SUGOMORI】ご宿泊のご案内（神部 葵様）");
   });
 
   it("前後の空白は落とす", () => {
-    assert.equal(bookingGuideSubject("  神部 葵 "), "【日靜】ご宿泊のご案内（神部 葵様）");
+    assert.equal(bookingGuideSubject("  神部 葵 "), "【SUGOMORI】ご宿泊のご案内（神部 葵様）");
   });
 
   it("名前が無ければ「様」だけの件名にしない", () => {
-    assert.equal(bookingGuideSubject(null), "【日靜】ご宿泊のご案内");
-    assert.equal(bookingGuideSubject("  "), "【日靜】ご宿泊のご案内");
+    assert.equal(bookingGuideSubject(null), "【SUGOMORI】ご宿泊のご案内");
+    assert.equal(bookingGuideSubject("  "), "【SUGOMORI】ご宿泊のご案内");
   });
 });
 
@@ -41,10 +41,9 @@ describe("bookingGuideText", () => {
     assert.ok(text.includes("キーパッド"), "当日の鍵の開け方");
   });
 
-  it("Wi-Fi の接続情報を載せる", () => {
+  it("Wi-Fi が未設定なら接続情報の項目ごと省く", () => {
     const text = bookingGuideText(base);
-    assert.ok(text.includes("nissei-guest"));
-    assert.ok(text.includes("gh-nissei37"));
+    assert.ok(!text.includes("■ Wi-Fi"));
   });
 
   it("チェックイン・チェックアウト時刻を項目として載せる", () => {
@@ -65,7 +64,7 @@ describe("bookingGuideText", () => {
     assert.ok(text.includes("R-20260809-JHDV"));
     assert.ok(text.includes("2名"));
     assert.ok(text.includes("素泊まりプラン"));
-    assert.ok(text.includes("070-1251-6275"));
+    assert.ok(text.includes("080-5830-4957"));
   });
 
   it("日付を曜日つきの和暦表記にする", () => {

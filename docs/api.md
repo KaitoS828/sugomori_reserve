@@ -1,9 +1,9 @@
-# nissei予約システム API / MCP リファレンス
+# SUGOMORI予約システム API / MCP リファレンス
 
 外部ツール・AIエージェントから空室確認や予約操作を行うための公式ドキュメント。
 
-- ベースURL: `https://reserve.gh-nissei.jp`
-- 対象施設: 一棟貸し宿「日靜」（1施設・1客室タイプ運用）
+- ベースURL: `https://sugomori-hokkaido.jp`
+- 対象施設: 一棟貸し宿「SUGOMORI」（1施設・1客室タイプ運用）
 
 ## 認証
 
@@ -98,7 +98,7 @@ Claude Code / Claude Desktop などのMCP対応クライアントから直接、
 ### Claude Codeから接続する
 
 ```
-claude mcp add --transport http nissei https://reserve.gh-nissei.jp/api/mcp \
+claude mcp add --transport http sugomori https://sugomori-hokkaido.jp/api/mcp \
   --header "Authorization: Bearer <EXTERNAL_API_KEY>"
 ```
 
@@ -109,7 +109,7 @@ claude mcp add --transport http nissei https://reserve.gh-nissei.jp/api/mcp \
 ### 動作確認（curlでの疎通テスト）
 
 ```
-curl -X POST https://reserve.gh-nissei.jp/api/mcp \
+curl -X POST https://sugomori-hokkaido.jp/api/mcp \
   -H "Authorization: Bearer <EXTERNAL_API_KEY>" \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \

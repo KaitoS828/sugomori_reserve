@@ -41,12 +41,12 @@ export const metadata: Metadata = {
   },
   description: SITE.description,
   keywords: [
-    "広尾町 宿",
-    "十勝 サウナ 貸切",
+    "大樹町 宿",
+    "十勝 一棟貸し",
     "北海道 一棟貸し",
-    "KOBU SAUNA",
-    "日靜",
-    "貸切サウナ 宿泊",
+    "トレイルハウス",
+    "SUGOMORI",
+    "焚き火 BBQ 宿",
   ],
   openGraph: {
     type: "website",

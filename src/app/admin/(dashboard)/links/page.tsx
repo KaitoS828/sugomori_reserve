@@ -62,8 +62,8 @@ const DEFAULT_LINKS: AdminLink[] = [
   },
   {
     id: "default-6",
-    title: "日靜 公式予約サイト（トップ）",
-    url: "https://reserve.gh-nissei.jp",
+    title: "SUGOMORI 公式予約サイト（トップ）",
+    url: "https://sugomori-hokkaido.jp",
     category: "公式・自社",
     description: "お客様向けの公式宿泊予約トップページ",
     sort_order: 6,

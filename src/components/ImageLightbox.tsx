@@ -10,7 +10,7 @@ export function ImageLightbox({
   thumbClassName = "h-24 sm:h-28",
 }: {
   images: string[];
-  /** alt文言の接頭辞（例:「一棟貸し宿「日靜」」「素泊まりプラン」）。何の写真かを画像検索・AIに伝える。 */
+  /** alt文言の接頭辞（例:「一棟貸し宿「SUGOMORI」」「素泊まりプラン」）。何の写真かを画像検索・AIに伝える。 */
   altPrefix: string;
   /** グリッドに並べるサムネイル数の上限（省略時は全件）。拡大表示は常に全件を巡回する。 */
   visibleCount?: number;

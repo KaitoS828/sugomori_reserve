@@ -84,8 +84,8 @@ describe("buildIcs", () => {
 
   it("UID は予定ごとに変わる（取り込み側で同じ予定と分かる）", () => {
     const ics = buildIcs(stays, NOW);
-    assert.ok(ics.includes("UID:resv-r1@gh-nissei.jp"));
-    assert.ok(ics.includes("UID:blocked-b1@gh-nissei.jp"));
+    assert.ok(ics.includes("UID:resv-r1@sugomori-hokkaido.jp"));
+    assert.ok(ics.includes("UID:blocked-b1@sugomori-hokkaido.jp"));
   });
 
   it("開始と終了が同じ、または逆転した予定は書かない", () => {

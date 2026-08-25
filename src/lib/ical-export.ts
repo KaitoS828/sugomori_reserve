@@ -30,7 +30,7 @@ export function stayFromReservation(r: {
   check_out: string;
 }): ExportStay {
   return {
-    uid: `resv-${r.id}@gh-nissei.jp`,
+    uid: `resv-${r.id}@sugomori-hokkaido.jp`,
     // 相手先に個人情報を出さない。誰の予約かは自社の管理画面で見る。
     summary: "予約済み",
     start: r.check_in,
@@ -45,7 +45,7 @@ export function stayFromBlocked(b: {
   end_date: string;
 }): ExportStay {
   return {
-    uid: `blocked-${b.id}@gh-nissei.jp`,
+    uid: `blocked-${b.id}@sugomori-hokkaido.jp`,
     summary: "予約不可",
     start: b.start_date,
     endExclusive: addDays(b.end_date, 1),
@@ -73,7 +73,7 @@ export function buildIcs(stays: ExportStay[], now = new Date()): string {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//nissei//reservation//JA",
+    "PRODID:-//sugomori//reservation//JA",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
   ];

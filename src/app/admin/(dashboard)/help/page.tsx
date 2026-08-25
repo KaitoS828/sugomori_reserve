@@ -100,7 +100,7 @@ export default function HelpPage() {
       <header>
         <h1 className="text-2xl font-semibold text-gray-900">使い方・FAQ</h1>
         <p className="mt-1 text-sm text-gray-600">
-          nissei予約システムの管理画面ガイド
+          SUGOMORI予約システムの管理画面ガイド
         </p>
       </header>
 

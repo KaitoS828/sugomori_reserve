@@ -3,10 +3,11 @@
 // 本文の組み立てだけをここに置く（送信手段に依存させない）。
 
 // 館内の案内。変更はここだけ直せば全文に反映される。
-export const WIFI_SSID = "nissei-guest";
-export const WIFI_PASSWORD = "gh-nissei37";
+// Wi-Fiは未設定のあいだ案内文から丸ごと省く（誤った接続情報を送らないため）。
+export const WIFI_SSID = "";
+export const WIFI_PASSWORD = "";
 export const HOUSE_NOTES = [
-  "漁師町のため、夜間はお静かにお過ごしください。近隣の方は早朝から漁に出られます。",
+  "夜間はお静かにお過ごしください。",
   "館内は禁煙です。喫煙は屋外の灰皿をご利用ください。",
   "ゴミは分別のうえ、所定の場所にお願いいたします。",
 ];
@@ -35,7 +36,7 @@ function jpDate(date: string): string {
 
 export function bookingGuideSubject(guestName: string | null): string {
   const name = guestName?.trim();
-  return name ? `【日靜】ご宿泊のご案内（${name}様）` : "【日靜】ご宿泊のご案内";
+  return name ? `【SUGOMORI】ご宿泊のご案内（${name}様）` : "【SUGOMORI】ご宿泊のご案内";
 }
 
 const escapeHtml = (s: string) =>
@@ -56,7 +57,7 @@ export function bookingGuideText(input: BookingGuideInput): string {
   blocks.push(
     `${name ? `${name} 様` : "お客様"}
 
-このたびは一棟貸し宿「日靜」をご予約いただきありがとうございます。
+このたびは一棟貸し宿「SUGOMORI」をご予約いただきありがとうございます。
 ご宿泊にあたってのご案内をお送りします。`,
   );
 
@@ -108,11 +109,13 @@ ${jpDate(input.checkOut)} ${input.checkOutTime} まで有効です。
 予約照会ページ（${input.lookupUrl}）からもご確認いただけます。` : ""}`,
   );
 
-  blocks.push(
-    `■ Wi-Fi
+  if (WIFI_SSID) {
+    blocks.push(
+      `■ Wi-Fi
 ネットワーク名（SSID）: ${WIFI_SSID}
 パスワード: ${WIFI_PASSWORD}`,
-  );
+    );
+  }
 
   blocks.push(`■ お願い\n${HOUSE_NOTES.map((n) => `・${n}`).join("\n")}`);
 
@@ -124,8 +127,8 @@ ${input.phone ? `電話: ${input.phone}` : ""}
 当日お会いできますことを楽しみにしております。
 
 ――――――――――――――――
-一棟貸し宿「日靜」
-住所: 北海道広尾郡広尾町音調津733番地${input.phone ? `\n電話: ${input.phone}` : ""}`.replace(
+一棟貸し宿「SUGOMORI」
+住所: 北海道広尾郡大樹町下大樹${input.phone ? `\n電話: ${input.phone}` : ""}`.replace(
       /\n\n+/g,
       "\n\n",
     ),

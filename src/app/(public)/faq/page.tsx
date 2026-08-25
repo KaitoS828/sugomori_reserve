@@ -30,8 +30,8 @@ const FAQS: { q: string; a: string }[] = [
     a: "館内は禁煙です。喫煙は屋外の指定された場所でお願いいたします。",
   },
   {
-    q: "サウナは貸切利用できますか？",
-    a: "専用の薪サウナ「KOBU SAUNA」を、宿泊のお客様だけで貸切利用いただけます。日帰りでのサウナ利用プランもございます。",
+    q: "焚き火やBBQはできますか？",
+    a: "敷地内で焚き火・BBQをお楽しみいただけます。光害のない環境ですので、満天の星の下でお過ごしください。",
   },
   {
     q: "キャンセル料はいつからかかりますか？",
@@ -82,10 +82,6 @@ export default function FaqPage() {
         ここに無いご質問は、お電話（
         <a href={`tel:${SITE.phone}`} className="text-teal-700 underline">
           {SITE.phone}
-        </a>
-        ）またはメール（
-        <a href={`mailto:${SITE.email}`} className="text-teal-700 underline">
-          {SITE.email}
         </a>
         ）よりお気軽にご連絡ください。
         <Link href="/reserve" className="ml-1 text-teal-700 underline">

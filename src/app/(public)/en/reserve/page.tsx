@@ -7,25 +7,25 @@ export const dynamic = "force-dynamic";
 // （既定のテンプレートだと日本語の宿名が後ろに付いてしまう）。
 export const metadata: Metadata = {
   title: {
-    absolute: "Book your stay | Nissei — private house with sauna, Hiroo, Hokkaido",
+    absolute: "Book your stay | SUGOMORI — trail house in Taiki, Hokkaido",
   },
   description:
-    "Book Nissei, a whole-house rental with a private sauna in Hiroo, Hokkaido. One group per day. Check availability and rates, and reserve online.",
+    "Book SUGOMORI, a whole-house trail house rental in Taiki, Hokkaido. One group per day. Check availability and rates, and reserve online.",
   alternates: { canonical: "/en/reserve", languages: { ja: "/reserve", en: "/en/reserve" } },
   openGraph: {
     type: "website",
     locale: "en_US",
-    title: "Book your stay | Nissei — private house with sauna, Hiroo, Hokkaido",
+    title: "Book your stay | SUGOMORI — trail house in Taiki, Hokkaido",
     description:
-      "A whole-house rental with a private sauna in Hiroo, Hokkaido. One group per day.",
+      "A whole-house trail house rental in Taiki, Hokkaido. One group per day.",
     url: "/en/reserve",
   },
   // 上書きしないと root layout の日本語がそのまま共有カードに出る
   twitter: {
     card: "summary_large_image",
-    title: "Book your stay | Nissei — private house with sauna, Hiroo, Hokkaido",
+    title: "Book your stay | SUGOMORI — trail house in Taiki, Hokkaido",
     description:
-      "A whole-house rental with a private sauna in Hiroo, Hokkaido. One group per day.",
+      "A whole-house trail house rental in Taiki, Hokkaido. One group per day.",
   },
 };
 

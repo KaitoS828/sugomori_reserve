@@ -12,7 +12,7 @@ export const GUIDE_SELECT =
 export function originFromHeaders(h: { get(name: string): string | null }): string {
   const origin = h.get("origin");
   if (origin) return origin;
-  const host = h.get("host") ?? "reserve.gh-nissei.jp";
+  const host = h.get("host") ?? "sugomori-hokkaido.jp";
   const isLocal = /^(localhost|127\.0\.0\.1|\[::1\])(:|$)/.test(host);
   return `${isLocal ? "http" : "https"}://${host}`;
 }

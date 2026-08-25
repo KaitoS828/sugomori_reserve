@@ -1,7 +1,10 @@
+import { SITE } from "@/lib/site";
+
 // チェックアウト後のゲストへ送るGoogleレビュー（クチコミ）依頼メール。
 // 管理画面からの手動送信や、チェックアウト後の送信で使用。
 
-export const DEFAULT_GOOGLE_REVIEW_URL = "https://g.page/r/Ce-mx4FEUkKbEAE/review";
+// SUGOMORI の Google ビジネスプロフィールが未確定のため、環境変数 GOOGLE_REVIEW_URL で指定する。
+export const DEFAULT_GOOGLE_REVIEW_URL = "";
 
 export type ReviewRequestInput = {
   guestName: string | null;
@@ -21,7 +24,7 @@ function jpDate(date: string): string {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function reviewRequestSubject(_guestName?: string | null): string {
-  return "【一棟貸し宿 日靜】ご宿泊の御礼とご感想（口コミ）のお願い";
+  return "【一棟貸し宿 SUGOMORI】ご宿泊の御礼とご感想（口コミ）のお願い";
 }
 
 const escapeHtml = (s: string) =>
@@ -36,20 +39,20 @@ export function reviewRequestHtml(input: ReviewRequestInput): string {
   return `
   <div style="font-family:-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:14px;line-height:1.9;color:#1f2937;max-width:560px;margin:0 auto">
     <div style="border-bottom:2px solid #0d9488;padding:16px 0">
-      <strong style="font-size:18px;color:#0f766e">一棟貸し宿「日靜」</strong>
+      <strong style="font-size:18px;color:#0f766e">一棟貸し宿「SUGOMORI」</strong>
     </div>
 
     <div style="padding:24px 0">
       <p style="margin:0 0 16px;font-weight:600">${escapeHtml(name ? `${name} 様` : "お客様")}</p>
 
       <p style="margin:0 0 16px">
-        このたびは一棟貸し宿「日靜」にご宿泊いただき、誠にありがとうございました。<br>
+        このたびは一棟貸し宿「SUGOMORI」にご宿泊いただき、誠にありがとうございました。<br>
         また、お部屋を大変綺麗にご利用いただき心より感謝申し上げます。
       </p>
 
       <p style="margin:0 0 16px">
         当宿でのご滞在は心地よくお過ごしいただけましたでしょうか。<br>
-        広尾町・音調津の静かなひとときが、皆様にとって少しでも癒やしや思い出の時間となっておりましたら幸いでございます。
+        大樹町・下大樹の静かなひとときが、皆様にとって少しでも癒やしや思い出の時間となっておりましたら幸いでございます。
       </p>
 
       <div style="margin:24px 0;padding:20px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px">
@@ -57,7 +60,7 @@ export function reviewRequestHtml(input: ReviewRequestInput): string {
           📝 Googleクチコミ（ご感想）のお願い
         </p>
         <p style="margin:0 0 16px;font-size:13px;color:#374151">
-          日靜はより心地よい宿づくりを目指しております。もしよろしければ、実際にご宿泊いただいたご感想や旅のエピソードをGoogleのクチコミにてお聞かせいただけますと大変励みになります。（1分ほどでご投稿いただけます）
+          SUGOMORIはより心地よい宿づくりを目指しております。もしよろしければ、実際にご宿泊いただいたご感想や旅のエピソードをGoogleのクチコミにてお聞かせいただけますと大変励みになります。（1分ほどでご投稿いただけます）
         </p>
         <div style="text-align:center;margin:16px 0">
           <a href="${escapeHtml(reviewUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#0d9488;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:6px;font-weight:600;font-size:14px;box-shadow:0 1px 2px rgba(0,0,0,0.05)">
@@ -89,10 +92,9 @@ export function reviewRequestHtml(input: ReviewRequestInput): string {
     </div>
 
     <div style="border-top:1px solid #e5e7eb;padding:16px 0;color:#6b7280;font-size:12px;line-height:1.6">
-      <strong style="color:#374151">一棟貸し宿「日靜」</strong><br>
-      住所: 北海道広尾郡広尾町音調津733番地<br>
-      ${phone ? `電話: ${escapeHtml(phone)}<br>` : ""}
-      メール: info@gh-nissei.jp
+      <strong style="color:#374151">一棟貸し宿「SUGOMORI」</strong><br>
+      住所: 北海道広尾郡大樹町下大樹<br>
+      電話: ${escapeHtml(phone || SITE.phone)}
     </div>
   </div>`;
 }
@@ -108,16 +110,16 @@ export function reviewRequestText(input: ReviewRequestInput): string {
   blocks.push(
     `${name ? `${name} 様` : "お客様"}
 
-このたびは一棟貸し宿「日靜」にご宿泊いただき、誠にありがとうございました。
+このたびは一棟貸し宿「SUGOMORI」にご宿泊いただき、誠にありがとうございました。
 また、お部屋を大変綺麗にご利用いただき心より感謝申し上げます。
 
 当宿でのご滞在は心地よくお過ごしいただけましたでしょうか。
-広尾町・音調津の静かなひとときが、皆様にとって少しでも癒やしや思い出の時間となっておりましたら幸いでございます。`,
+大樹町・下大樹の静かなひとときが、皆様にとって少しでも癒やしや思い出の時間となっておりましたら幸いでございます。`,
   );
 
   blocks.push(
     `■ Googleクチコミ（ご感想）のお願い
-日靜では、皆様のご意見を大切にし、より心地よい宿づくりを目指しております。
+SUGOMORIでは、皆様のご意見を大切にし、より心地よい宿づくりを目指しております。
 もしよろしければ、実際にご滞在されたご感想や旅のエピソードをGoogleのクチコミにてお聞かせいただけますと大変励みになります。
 （1分ほどで簡単にご投稿いただけます）
 
@@ -136,9 +138,9 @@ ${reviewUrl}`,
 皆様のまたのお越しを心よりお待ちしております。
 
 ――――――――――――――――
-一棟貸し宿「日靜」
-住所: 北海道広尾郡広尾町音調津733番地
-${phone ? `電話: ${phone}\n` : ""}メール: info@gh-nissei.jp`.replace(/\n\n+/g, "\n\n"),
+一棟貸し宿「SUGOMORI」
+住所: 北海道広尾郡大樹町下大樹
+電話: ${phone || SITE.phone}`.replace(/\n\n+/g, "\n\n"),
   );
 
   return blocks.join("\n\n");
@@ -153,7 +155,7 @@ export function reviewRequestCustomHtml(customBody: string): string {
   return `
   <div style="font-family:-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:14px;line-height:1.9;color:#1f2937;max-width:560px;margin:0 auto">
     <div style="border-bottom:2px solid #0d9488;padding:16px 0">
-      <strong style="font-size:18px;color:#0f766e">一棟貸し宿「日靜」</strong>
+      <strong style="font-size:18px;color:#0f766e">一棟貸し宿「SUGOMORI」</strong>
     </div>
 
     <div style="padding:24px 0">
@@ -161,9 +163,9 @@ export function reviewRequestCustomHtml(customBody: string): string {
     </div>
 
     <div style="border-top:1px solid #e5e7eb;padding:16px 0;color:#6b7280;font-size:12px;line-height:1.6">
-      <strong style="color:#374151">一棟貸し宿「日靜」</strong><br>
-      住所: 北海道広尾郡広尾町音調津733番地<br>
-      メール: info@gh-nissei.jp
+      <strong style="color:#374151">一棟貸し宿「SUGOMORI」</strong><br>
+      住所: 北海道広尾郡大樹町下大樹<br>
+      電話: ${SITE.phone}
     </div>
   </div>`;
 }

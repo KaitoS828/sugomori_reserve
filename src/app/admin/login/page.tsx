@@ -16,8 +16,8 @@ export default async function LoginPage({
         className="w-full max-w-sm space-y-5 rounded-2xl border border-gray-200 bg-white p-8"
       >
         <div className="space-y-1">
-          <Image src="/logo.png" alt="日靜" width={40} height={40} className="mb-2 h-10 w-10" priority />
-          <h1 className="text-xl font-semibold text-gray-900">nissei 管理</h1>
+          <Image src="/logo.png" alt="SUGOMORI" width={40} height={40} className="mb-2 h-10 w-10" priority />
+          <h1 className="text-xl font-semibold text-gray-900">SUGOMORI 管理</h1>
           <p className="text-sm text-gray-600">管理画面にログイン</p>
         </div>
 

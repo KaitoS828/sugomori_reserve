@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
         if (owners.length) {
           await sendEmail({
             to: owners,
-            subject: `【日靜】新規予約 ${r.code}（${info.name}様）`,
+            subject: `【SUGOMORI】新規予約 ${r.code}（${info.name}様）`,
             html: ownerBookingHtml({ ...info, email: cust?.email ?? undefined, phone: cust?.phone ?? undefined }),
           }).catch(() => {});
         }
@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
             .maybeSingle();
           const secret = await ensureSecretCode(supabase, reservationId);
           const host = req.headers.get("host");
-          const origin = host ? `https://${host}` : "https://reserve.gh-nissei.jp";
+          const origin = host ? `https://${host}` : "https://sugomori-hokkaido.jp";
           const subject = bookingGuideSubject(info.name);
           const lookupUrl = `${origin}/reserve/lookup?code=${encodeURIComponent(info.code)}&email=${encodeURIComponent(cust.email)}`;
           const html = bookingGuideHtml(

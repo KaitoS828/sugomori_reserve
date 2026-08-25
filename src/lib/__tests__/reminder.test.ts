@@ -11,19 +11,19 @@ const base: ReminderInput = {
   numGuests: 2,
   registeredGuests: 2,
   doorPin: "129053",
-  registerUrl: "https://reserve.gh-nissei.jp/register/abc123",
-  lookupUrl: "https://reserve.gh-nissei.jp/reserve/lookup?code=R-20260814-KFKZ&email=test%40example.com",
-  phone: "070-1251-6275",
+  registerUrl: "https://sugomori-hokkaido.jp/register/abc123",
+  lookupUrl: "https://sugomori-hokkaido.jp/reserve/lookup?code=R-20260814-KFKZ&email=test%40example.com",
+  phone: "080-5830-4957",
 };
 
 describe("reminderSubject", () => {
   it("お名前を件名に入れる", () => {
-    assert.equal(reminderSubject("神部 葵"), "【日靜】明日のご宿泊について（神部 葵様）");
+    assert.equal(reminderSubject("神部 葵"), "【SUGOMORI】明日のご宿泊について（神部 葵様）");
   });
 
   it("名前が無ければ「様」だけの件名にしない", () => {
-    assert.equal(reminderSubject(null), "【日靜】明日のご宿泊について");
-    assert.equal(reminderSubject("  "), "【日靜】明日のご宿泊について");
+    assert.equal(reminderSubject(null), "【SUGOMORI】明日のご宿泊について");
+    assert.equal(reminderSubject("  "), "【SUGOMORI】明日のご宿泊について");
   });
 });
 
@@ -66,8 +66,8 @@ describe("reminderText", () => {
 
   it("末尾に施設名と住所を載せる", () => {
     const text = reminderText(base);
-    assert.ok(text.includes("一棟貸し宿「日靜」"));
-    assert.ok(text.includes("北海道広尾郡広尾町音調津733番地"));
+    assert.ok(text.includes("一棟貸し宿「SUGOMORI」"));
+    assert.ok(text.includes("北海道広尾郡大樹町下大樹"));
   });
 
   it("どの欠損があっても undefined や null が本文に出ない", () => {

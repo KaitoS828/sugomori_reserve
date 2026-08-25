@@ -30,7 +30,7 @@ function toZodShape(schema: {
 }
 
 function buildServer(): McpServer {
-  const server = new McpServer({ name: "nissei-reserve", version: "1.0.0" });
+  const server = new McpServer({ name: "sugomori-reserve", version: "1.0.0" });
   for (const tool of TOOLS) {
     const impl = toolImpls[tool.name];
     server.registerTool(

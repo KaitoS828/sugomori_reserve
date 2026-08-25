@@ -97,7 +97,7 @@ export async function confirmCancel(formData: FormData) {
   if (owners.length) {
     await sendEmail({
       to: owners,
-      subject: `【日靜】予約キャンセル ${code}`,
+      subject: `【SUGOMORI】予約キャンセル ${code}`,
       html: ownerCancellationHtml({ code, name, category, reason, refund: refundAmount }),
     }).catch(() => {});
   }

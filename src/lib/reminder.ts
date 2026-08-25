@@ -25,7 +25,7 @@ function jpDate(date: string): string {
 
 export function reminderSubject(guestName: string | null): string {
   const name = guestName?.trim();
-  return name ? `【日靜】明日のご宿泊について（${name}様）` : "【日靜】明日のご宿泊について";
+  return name ? `【SUGOMORI】明日のご宿泊について（${name}様）` : "【SUGOMORI】明日のご宿泊について";
 }
 
 export function reminderText(input: ReminderInput): string {
@@ -80,8 +80,8 @@ ${input.phone ? `電話: ${input.phone}` : ""}
 お会いできますことを楽しみにしております。
 
 ――――――――――――――――
-一棟貸し宿「日靜」
-住所: 北海道広尾郡広尾町音調津733番地${input.phone ? `\n電話: ${input.phone}` : ""}`.replace(
+一棟貸し宿「SUGOMORI」
+住所: 北海道広尾郡大樹町下大樹${input.phone ? `\n電話: ${input.phone}` : ""}`.replace(
       /\n\n+/g,
       "\n\n",
     ),

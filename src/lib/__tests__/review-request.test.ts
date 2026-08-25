@@ -11,11 +11,11 @@ describe("reviewRequestSubject", () => {
   it("件名を統一して返す", () => {
     assert.strictEqual(
       reviewRequestSubject("山田 太郎"),
-      "【一棟貸し宿 日靜】ご宿泊の御礼とご感想（口コミ）のお願い",
+      "【一棟貸し宿 SUGOMORI】ご宿泊の御礼とご感想（口コミ）のお願い",
     );
     assert.strictEqual(
       reviewRequestSubject(null),
-      "【一棟貸し宿 日靜】ご宿泊の御礼とご感想（口コミ）のお願い",
+      "【一棟貸し宿 SUGOMORI】ご宿泊の御礼とご感想（口コミ）のお願い",
     );
   });
 });
@@ -26,7 +26,7 @@ describe("reviewRequestText & reviewRequestHtml", () => {
     code: "R-20260819-ABCD",
     checkIn: "2026-08-18",
     checkOut: "2026-08-19",
-    phone: "070-1251-6275",
+    phone: "080-5830-4957",
   };
 
   it("テキスト本文にお礼、ログイン注意、レビューURLが含まれる", () => {

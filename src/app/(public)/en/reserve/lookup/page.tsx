@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 // 予約番号とメールを扱う画面なので、日本語版と同じく検索対象から外す。
 export const metadata: Metadata = {
-  title: { absolute: "Find or cancel your booking | Nissei" },
+  title: { absolute: "Find or cancel your booking | SUGOMORI" },
   robots: { index: false, follow: false },
 };
 
