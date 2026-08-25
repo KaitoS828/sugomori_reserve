@@ -1,15 +1,17 @@
-import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 import { randomUUID } from "crypto";
 import { createAdminClient } from "./supabase/admin";
+import { getDefaultFacilityId } from "./facility";
 import { getTypeAvailability, canBook, generateReservationCode } from "./reservations";
 import { eachNight } from "./availability";
 import { calcPrice, nightlyRateForGuests, type Discount, type GuestPrices } from "./pricing";
 import { computeRefund } from "./cancel";
 import { getStripe } from "./stripe";
 import { gcalCreateEvent, gcalDeleteEvent } from "./gcal";
+import { revokeDoorPin } from "./smart-lock";
 
-// 無料・高速の Groq（OpenAI互換）。ツール呼び出し対応モデル。
-const MODEL = "llama-3.3-70b-versatile";
+// コスト重視で Sonnet（現行は 4.6。「4.7」は存在しないため 4.6 を使用）
+const MODEL = "claude-sonnet-4-6";
 
 function todayStr() {
   const d = new Date();
@@ -31,8 +33,8 @@ async function activeRoomTypeId(): Promise<string | null> {
 const RESV_SELECT =
   "code, check_in, check_out, nights, num_guests, amount, status, payment_status, room_type_id, customers(last_name, first_name, email, phone), plans(name)";
 
-// ---- ツール実装 ----
-const toolImpls: Record<string, (input: Record<string, unknown>) => Promise<string>> = {
+// ---- ツール実装（Slack / サイト内アシスタントで共用）----
+export const toolImpls: Record<string, (input: Record<string, unknown>) => Promise<string>> = {
   async check_availability(input) {
     const from = String(input.from);
     const to = String(input.to);
@@ -135,6 +137,7 @@ const toolImpls: Record<string, (input: Record<string, unknown>) => Promise<stri
     const payStatus = refundAmount >= (resv.amount as number) ? "refunded" : refundAmount > 0 ? "partially_refunded" : (resv.payment_status as string);
     await supabase.from("reservations").update({ status: "cancelled", payment_status: payStatus, cancel_category: "オーナー操作", cancel_reason: reason || null, cancelled_at: new Date().toISOString() }).eq("id", resv.id);
     if (resv.gcal_event_id) await gcalDeleteEvent(resv.gcal_event_id as string).catch(() => {});
+    await revokeDoorPin(resv.id as string).catch(() => {});
     return `予約 ${code} をキャンセルしました。返金額: ¥${refundAmount.toLocaleString()}`;
   },
 
@@ -143,7 +146,10 @@ const toolImpls: Record<string, (input: Record<string, unknown>) => Promise<stri
     const end = String(input.end ?? start);
     const reason = input.reason ? String(input.reason) : "休業";
     const supabase = createAdminClient();
-    const { error } = await supabase.from("blocked_dates").insert({ start_date: start, end_date: end, reason });
+    const facilityId = await getDefaultFacilityId(supabase);
+    const { error } = await supabase
+      .from("blocked_dates")
+      .insert({ facility_id: facilityId, start_date: start, end_date: end, reason });
     if (error) return `休業日の設定に失敗しました: ${error.message}`;
     return `${start}〜${end} を予約不可（${reason}）に設定しました。公開カレンダーに反映されます。`;
   },
@@ -206,7 +212,8 @@ const toolImpls: Record<string, (input: Record<string, unknown>) => Promise<stri
     const price = calcPrice(check_in, check_out, nightly, (planData.discounts ?? []) as Discount[]);
     const amount = amount_override ?? price.total;
 
-    const custFields = { last_name, first_name, ...(email ? { email } : {}), ...(phone ? { phone } : {}) };
+    const facilityId = await getDefaultFacilityId(supabase);
+    const custFields = { last_name, first_name, facility_id: facilityId, ...(email ? { email } : {}), ...(phone ? { phone } : {}) };
     let customerId: string;
     if (email) {
       const { data: existing } = await supabase.from("customers").select("id").eq("email", email).limit(1).maybeSingle();
@@ -228,8 +235,10 @@ const toolImpls: Record<string, (input: Record<string, unknown>) => Promise<stri
     const { data: resv, error: resErr } = await supabase
       .from("reservations")
       .insert({
+        // nights は DB の生成列なので渡さない（渡すと insert が拒否される）
         code, customer_id: customerId, plan_id: planData.id, room_type_id: roomTypeId,
-        check_in, check_out, nights: price.nights, num_guests, num_children: 0,
+        facility_id: facilityId,
+        check_in, check_out, num_guests, num_children: 0,
         amount, status: "confirmed", payment_status, source: "admin",
         ...(note ? { note } : {}),
         lookup_token: randomUUID(),
@@ -285,16 +294,16 @@ function formatResv(r: Record<string, unknown>): string {
   return `・${r.code} | ${name} | ${r.check_in}〜${r.check_out}（${r.nights}泊/${r.num_guests}名） | ${p?.name ?? "—"} | ¥${Number(r.amount).toLocaleString()} | ${r.status}`;
 }
 
-const TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
-  { type: "function", function: { name: "check_availability", description: "指定期間の空室状況を確認する。", parameters: { type: "object", properties: { from: { type: "string", description: "チェックイン日 YYYY-MM-DD" }, to: { type: "string", description: "チェックアウト日 YYYY-MM-DD" } }, required: ["from", "to"] } } },
-  { type: "function", function: { name: "list_reservations", description: "予約の一覧を取得する。scope=today(本日), upcoming(今後), all(直近)。queryで氏名・予約番号・メールで絞り込み可。", parameters: { type: "object", properties: { scope: { type: "string", enum: ["today", "upcoming", "all"] }, query: { type: "string" } }, required: [] } } },
-  { type: "function", function: { name: "get_reservation", description: "予約番号で1件の予約詳細を取得する。", parameters: { type: "object", properties: { code: { type: "string" } }, required: ["code"] } } },
-  { type: "function", function: { name: "quote_cancellation", description: "キャンセルした場合の返金額・キャンセル料を試算する（DBは変更しない）。キャンセルを実行する前に必ずこれで金額を提示し、確認を取ること。", parameters: { type: "object", properties: { code: { type: "string" } }, required: ["code"] } } },
-  { type: "function", function: { name: "cancel_reservation", description: "予約をキャンセルする（取り消し不可）。キャンセルポリシーに従いStripe返金も行う。実行前にユーザーの明確な同意が必要。理由を添える。", parameters: { type: "object", properties: { code: { type: "string" }, reason: { type: "string" } }, required: ["code"] } } },
-  { type: "function", function: { name: "block_dates", description: "休業日（予約不可日）を設定する。公開カレンダーがグレーになる。", parameters: { type: "object", properties: { start: { type: "string", description: "開始日 YYYY-MM-DD" }, end: { type: "string", description: "終了日 YYYY-MM-DD（省略時は1日）" }, reason: { type: "string" } }, required: ["start"] } } },
-  { type: "function", function: { name: "unblock_dates", description: "指定開始日の休業日設定を解除する。", parameters: { type: "object", properties: { start: { type: "string" } }, required: ["start"] } } },
-  { type: "function", function: { name: "create_reservation", description: "新規予約を登録する。空室確認・料金計算・顧客登録・Googleカレンダー反映まで行う。電話・対面・Airbnb等の外部チャネル経由の予約を手動登録する際に使う。", parameters: { type: "object", properties: { last_name: { type: "string", description: "姓" }, first_name: { type: "string", description: "名" }, email: { type: "string", description: "メールアドレス（任意）" }, phone: { type: "string", description: "電話番号（任意）" }, check_in: { type: "string", description: "チェックイン日 YYYY-MM-DD" }, check_out: { type: "string", description: "チェックアウト日 YYYY-MM-DD" }, num_guests: { type: "number", description: "人数" }, plan: { type: "string", description: "プラン名（部分一致。省略時はデフォルトプラン）" }, amount: { type: "number", description: "金額（省略時は自動計算）" }, payment_status: { type: "string", enum: ["unpaid", "paid"], description: "支払状況（デフォルト: unpaid）" }, note: { type: "string", description: "備考・特記事項" } }, required: ["last_name", "first_name", "check_in", "check_out", "num_guests"] } } },
-  { type: "function", function: { name: "update_reservation", description: "予約の日程・人数・ステータスを変更する。日程変更時は空室を確認する。", parameters: { type: "object", properties: { code: { type: "string" }, check_in: { type: "string" }, check_out: { type: "string" }, num_guests: { type: "number" }, status: { type: "string", enum: ["pending", "confirmed", "checked_in", "checked_out", "cancelled", "no_show"] } }, required: ["code"] } } },
+export const TOOLS: Anthropic.Tool[] = [
+  { name: "check_availability", description: "指定期間の空室状況を確認する。", input_schema: { type: "object", properties: { from: { type: "string", description: "チェックイン日 YYYY-MM-DD" }, to: { type: "string", description: "チェックアウト日 YYYY-MM-DD" } }, required: ["from", "to"] } },
+  { name: "list_reservations", description: "予約の一覧を取得する。scope=today(本日), upcoming(今後), all(直近)。queryで氏名・予約番号・メールで絞り込み可。", input_schema: { type: "object", properties: { scope: { type: "string", enum: ["today", "upcoming", "all"] }, query: { type: "string" } }, required: [] } },
+  { name: "get_reservation", description: "予約番号で1件の予約詳細を取得する。", input_schema: { type: "object", properties: { code: { type: "string" } }, required: ["code"] } },
+  { name: "quote_cancellation", description: "キャンセルした場合の返金額・キャンセル料を試算する（DBは変更しない）。キャンセルを実行する前に必ずこれで金額を提示し、確認を取ること。", input_schema: { type: "object", properties: { code: { type: "string" } }, required: ["code"] } },
+  { name: "cancel_reservation", description: "予約をキャンセルする（取り消し不可）。キャンセルポリシーに従いStripe返金も行う。実行前にユーザーの明確な同意が必要。理由を添える。", input_schema: { type: "object", properties: { code: { type: "string" }, reason: { type: "string" } }, required: ["code"] } },
+  { name: "block_dates", description: "休業日（予約不可日）を設定する。公開カレンダーがグレーになる。", input_schema: { type: "object", properties: { start: { type: "string", description: "開始日 YYYY-MM-DD" }, end: { type: "string", description: "終了日 YYYY-MM-DD（省略時は1日）" }, reason: { type: "string" } }, required: ["start"] } },
+  { name: "unblock_dates", description: "指定開始日の休業日設定を解除する。", input_schema: { type: "object", properties: { start: { type: "string" } }, required: ["start"] } },
+  { name: "create_reservation", description: "新規予約を登録する。空室確認・料金計算・顧客登録・Googleカレンダー反映まで行う。電話・対面・Airbnb等の外部チャネル経由の予約を手動登録する際に使う。", input_schema: { type: "object", properties: { last_name: { type: "string", description: "姓" }, first_name: { type: "string", description: "名" }, email: { type: "string", description: "メールアドレス（任意）" }, phone: { type: "string", description: "電話番号（任意）" }, check_in: { type: "string", description: "チェックイン日 YYYY-MM-DD" }, check_out: { type: "string", description: "チェックアウト日 YYYY-MM-DD" }, num_guests: { type: "number", description: "人数" }, plan: { type: "string", description: "プラン名（部分一致。省略時はデフォルトプラン）" }, amount: { type: "number", description: "金額（省略時は自動計算）" }, payment_status: { type: "string", enum: ["unpaid", "paid"], description: "支払状況（デフォルト: unpaid）" }, note: { type: "string", description: "備考・特記事項" } }, required: ["last_name", "first_name", "check_in", "check_out", "num_guests"] } },
+  { name: "update_reservation", description: "予約の日程・人数・ステータスを変更する。日程変更時は空室を確認する。", input_schema: { type: "object", properties: { code: { type: "string" }, check_in: { type: "string" }, check_out: { type: "string" }, num_guests: { type: "number" }, status: { type: "string", enum: ["pending", "confirmed", "checked_in", "checked_out", "cancelled", "no_show"] } }, required: ["code"] } },
 ];
 
 const SYSTEM = `あなたは一棟貸し宿「SUGOMORI」の予約システムの運用アシスタントです。Slackでオーナーからの依頼を受け、ツールを使って予約状況の確認・予約の変更/キャンセル・休業日設定などを行います。
@@ -306,47 +315,47 @@ const SYSTEM = `あなたは一棟貸し宿「SUGOMORI」の予約システム�
 - 同意が曖昧な場合（「どうしよう」等）は実行せず、再確認する。
 - 返金額やポリシーはツールが自動計算します。憶測で金額を答えないこと。`;
 
-type ChatMessage = OpenAI.Chat.Completions.ChatCompletionMessageParam;
-export type AgentTurn = { reply: string; messages: ChatMessage[] };
+export type AgentTurn = { reply: string; messages: Anthropic.MessageParam[] };
 
 // Slackからの1メッセージを処理。history はスレッドの過去会話（確認ステップの文脈保持用）。
-export async function runAgent(userText: string, history: ChatMessage[] = []): Promise<AgentTurn> {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) return { reply: "（GROQ_API_KEY が未設定のため、AIエージェントは無効です）", messages: history };
-  const client = new OpenAI({ apiKey, baseURL: "https://api.groq.com/openai/v1" });
+export async function runAgent(userText: string, history: Anthropic.MessageParam[] = []): Promise<AgentTurn> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return { reply: "（ANTHROPIC_API_KEY が未設定のため、AIエージェントは無効です）", messages: history };
+  const client = new Anthropic({ apiKey });
 
-  const messages: ChatMessage[] = [...history, { role: "user", content: userText }];
+  const messages: Anthropic.MessageParam[] = [...history, { role: "user", content: userText }];
 
   for (let step = 0; step < 8; step++) {
-    const res = await client.chat.completions.create({
+    const res = await client.messages.create({
       model: MODEL,
-      temperature: 0.3,
-      messages: [{ role: "system", content: SYSTEM }, ...messages],
+      max_tokens: 4096,
+      thinking: { type: "adaptive" },
+      system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
       tools: TOOLS,
-      tool_choice: "auto",
+      messages,
     });
 
-    const msg = res.choices[0]?.message;
-    if (!msg) return { reply: "（応答がありませんでした）", messages };
-    messages.push(msg as ChatMessage);
+    messages.push({ role: "assistant", content: res.content });
 
-    const toolCalls = msg.tool_calls ?? [];
-    if (toolCalls.length === 0) {
-      return { reply: (msg.content ?? "").trim() || "（応答がありませんでした）", messages };
+    if (res.stop_reason !== "tool_use") {
+      const text = res.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("\n").trim();
+      return { reply: text || "（応答がありませんでした）", messages };
     }
 
-    for (const call of toolCalls) {
-      if (call.type !== "function") continue;
-      let out: string;
-      try {
-        const impl = toolImpls[call.function.name];
-        const args = call.function.arguments ? JSON.parse(call.function.arguments) : {};
-        out = impl ? await impl(args as Record<string, unknown>) : `不明なツール: ${call.function.name}`;
-      } catch (e) {
-        out = `ツール実行エラー: ${e instanceof Error ? e.message : String(e)}`;
+    const toolResults: Anthropic.ToolResultBlockParam[] = [];
+    for (const block of res.content) {
+      if (block.type === "tool_use") {
+        let out: string;
+        try {
+          const impl = toolImpls[block.name];
+          out = impl ? await impl(block.input as Record<string, unknown>) : `不明なツール: ${block.name}`;
+        } catch (e) {
+          out = `ツール実行エラー: ${e instanceof Error ? e.message : String(e)}`;
+        }
+        toolResults.push({ type: "tool_result", tool_use_id: block.id, content: out });
       }
-      messages.push({ role: "tool", tool_call_id: call.id, content: out });
     }
+    messages.push({ role: "user", content: toolResults });
   }
   return { reply: "処理が長くなりすぎたため中断しました。もう一度具体的に指示してください。", messages };
 }

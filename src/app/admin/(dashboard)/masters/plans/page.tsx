@@ -1,3 +1,5 @@
+import { SubmitButton } from "@/components/SubmitButton";
+import { PlanGalleryEditor } from "@/components/PlanGalleryEditor";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Plan } from "@/types/db";
 import { createPlan, updatePlan, togglePlanActive, deletePlan, setPlanPrice } from "./actions";
@@ -5,9 +7,9 @@ import { createPlan, updatePlan, togglePlanActive, deletePlan, setPlanPrice } fr
 export const dynamic = "force-dynamic";
 
 const field =
-  "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-cyan-400";
+  "w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none focus:border-cyan-600";
 const btnPrimary =
-  "rounded-lg bg-cyan-500 px-4 py-2 text-sm font-medium text-gray-950 transition hover:bg-cyan-600";
+  "rounded-lg bg-cyan-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-cyan-700";
 
 const MEAL = [
   { value: "none", label: "食事なし" },
@@ -46,7 +48,7 @@ export default async function PlansPage() {
     <div className="space-y-8">
       <header>
         <h1 className="text-2xl font-semibold text-gray-900">宿泊プラン</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-gray-600">
           素泊まり・朝食付きなどの宿泊プラン
         </p>
       </header>
@@ -64,7 +66,7 @@ export default async function PlansPage() {
           ))}
         </select>
         <input name="sort_order" type="number" defaultValue={0} placeholder="表示順" className={field} />
-        <button className={btnPrimary}>追加</button>
+        <SubmitButton className={btnPrimary}>追加</SubmitButton>
         <input name="description" placeholder="説明（任意）" className={`${field} md:col-span-5`} />
       </form>
 
@@ -81,12 +83,12 @@ export default async function PlansPage() {
               <span className="flex items-center gap-3">
                 <span className="font-medium text-gray-900">{plan.name}</span>
                 {!plan.is_active && (
-                  <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
+                  <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
                     無効
                   </span>
                 )}
               </span>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-gray-600">
                 {mealLabel(plan.meal_type)}
               </span>
             </summary>
@@ -103,12 +105,17 @@ export default async function PlansPage() {
                   ))}
                 </select>
                 <input name="sort_order" type="number" defaultValue={plan.sort_order} className={field} />
-                <button className={btnPrimary}>保存</button>
+                <SubmitButton className={btnPrimary}>保存</SubmitButton>
                 <input name="description" defaultValue={plan.description ?? ""} placeholder="説明" className={`${field} md:col-span-5`} />
               </form>
 
-              <div className="space-y-3 rounded-xl border border-gray-200 bg-white/40 p-4">
-                <p className="text-xs font-medium text-gray-500">1泊あたりの料金（客室タイプ別）</p>
+              <div className="space-y-3 rounded-xl border border-gray-200 bg-gray-100 p-4">
+                <p className="text-xs font-medium text-gray-600">プラン詳細ページに載せる写真</p>
+                <PlanGalleryEditor planId={plan.id} initialImages={plan.gallery_images ?? []} />
+              </div>
+
+              <div className="space-y-3 rounded-xl border border-gray-200 bg-gray-100 p-4">
+                <p className="text-xs font-medium text-gray-600">1泊あたりの料金（客室タイプ別）</p>
                 {roomTypes.length === 0 && (
                   <p className="text-sm text-gray-500">客室タイプが未登録です。</p>
                 )}
@@ -122,7 +129,7 @@ export default async function PlansPage() {
                     <input type="hidden" name="room_type_id" value={rt.id} />
 
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="min-w-20 text-sm font-medium text-gray-200">{rt.name}</span>
+                      <span className="min-w-20 text-sm font-medium text-gray-800">{rt.name}</span>
                       <span className="text-xs text-gray-500">設定料金</span>
                       <span className="text-sm text-gray-500">¥</span>
                       <input
@@ -139,13 +146,13 @@ export default async function PlansPage() {
                     </div>
 
                     <div>
-                      <p className="mb-1.5 text-xs text-gray-500">
+                      <p className="mb-1.5 text-xs text-gray-600">
                         人数別料金（1泊・空欄なら設定料金を使用）
                       </p>
                       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
                         {Array.from({ length: rt.capacity ?? 6 }, (_, i) => i + 1).map((n) => (
                           <label key={n} className="flex items-center gap-1.5">
-                            <span className="w-8 shrink-0 text-xs text-gray-500">{n}名</span>
+                            <span className="w-8 shrink-0 text-xs text-gray-600">{n}名</span>
                             <input
                               name={`guest_${n}`}
                               type="number"
@@ -160,7 +167,7 @@ export default async function PlansPage() {
                       </div>
                     </div>
 
-                    <button className={btnPrimary}>料金を保存</button>
+                    <SubmitButton className={btnPrimary}>料金を保存</SubmitButton>
                   </form>
                 ))}
               </div>
@@ -169,15 +176,15 @@ export default async function PlansPage() {
                 <form action={togglePlanActive}>
                   <input type="hidden" name="id" value={plan.id} />
                   <input type="hidden" name="is_active" value={String(!plan.is_active)} />
-                  <button className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 transition hover:bg-gray-100">
+                  <SubmitButton className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 transition hover:bg-gray-100">
                     {plan.is_active ? "無効化" : "有効化"}
-                  </button>
+                  </SubmitButton>
                 </form>
                 <form action={deletePlan}>
                   <input type="hidden" name="id" value={plan.id} />
-                  <button className="rounded-lg border border-red-900 px-3 py-1.5 text-sm text-red-400 transition hover:bg-red-950/40">
+                  <SubmitButton className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-600 transition hover:bg-red-100">
                     削除
-                  </button>
+                  </SubmitButton>
                 </form>
               </div>
             </div>

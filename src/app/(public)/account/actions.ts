@@ -34,8 +34,9 @@ export async function login(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const next = String(formData.get("next") ?? "").trim();
+  const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "";
   const params = new URLSearchParams();
-  if (next.startsWith("/") && !next.startsWith("//")) params.set("next", next);
+  if (safeNext) params.set("next", safeNext);
   const fail = (message: string): never => {
     params.set("error", message);
     redirect(`/account/login?${params.toString()}`);
@@ -48,8 +49,9 @@ export async function login(formData: FormData) {
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
+  // Supabase の生メッセージは英語なので、そのまま出さず一律の日本語に寄せる
   if (error) fail("メールアドレスまたはパスワードが違います");
-  redirect(next.startsWith("/") && !next.startsWith("//") ? next : "/account");
+  redirect(safeNext || "/account");
 }
 
 export async function logout() {

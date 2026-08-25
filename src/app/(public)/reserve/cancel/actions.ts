@@ -4,13 +4,16 @@ import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe";
 import { computeRefund } from "@/lib/cancel";
-import { sendEmail, cancellationHtml, ownerCancellationHtml, ownerEmails } from "@/lib/email";
-import { notifyOwner, cancellationMessage } from "@/lib/notify";
+import { sendEmail, cancellationHtml, cancellationSubject, ownerCancellationHtml, ownerEmails } from "@/lib/email";
+import { notifyOwner, cancellationMessage, notifyFailure } from "@/lib/notify";
 import { gcalDeleteEvent } from "@/lib/gcal";
+import { revokeDoorPin } from "@/lib/smart-lock";
+import { isLocale, localePath, type Locale } from "@/lib/i18n";
 
-function back(code: string, email: string, msg: string): never {
-  const q = new URLSearchParams({ code, email, error: msg });
-  redirect(`/reserve/cancel?${q.toString()}`);
+// エラーは文言ではなくコードでURLに載せる（表示側で言語ごとに引く）。
+function back(locale: Locale, code: string, email: string, errCode: string): never {
+  const q = new URLSearchParams({ code, email, error: errCode });
+  redirect(`${localePath(locale, "/reserve/cancel")}?${q.toString()}`);
 }
 
 export async function confirmCancel(formData: FormData) {
@@ -18,8 +21,10 @@ export async function confirmCancel(formData: FormData) {
   const email = String(formData.get("email") ?? "");
   const category = String(formData.get("category") ?? "").trim();
   const reason = String(formData.get("reason") ?? "").trim();
+  const rawLocale = String(formData.get("locale") ?? "ja");
+  const locale: Locale = isLocale(rawLocale) ? rawLocale : "ja";
 
-  if (!category) back(code, email, "キャンセル理由を選択してください");
+  if (!category) back(locale, code, email, "category_required");
 
   const supabase = createAdminClient();
   const { data: resv } = await supabase
@@ -30,8 +35,8 @@ export async function confirmCancel(formData: FormData) {
 
   const cust = resv?.customers as unknown as { email: string; last_name: string | null; first_name: string | null } | null;
   const custEmail = cust?.email;
-  if (!resv || custEmail !== email) back(code, email, "予約が見つかりません");
-  if (resv!.status === "cancelled") back(code, email, "すでにキャンセル済みです");
+  if (!resv || custEmail !== email) back(locale, code, email, "not_found");
+  if (resv!.status === "cancelled") back(locale, code, email, "already_cancelled");
 
   const { data: facility } = await supabase.from("facility").select("cancel_policy").limit(1).single();
   const { refundAmount } = computeRefund(
@@ -57,7 +62,7 @@ export async function confirmCancel(formData: FormData) {
           .update({ refunded_amount: refundAmount, status: refundAmount >= resv!.amount ? "refunded" : "partially_refunded" })
           .eq("id", payment.id);
       } catch {
-        back(code, email, "返金処理に失敗しました。お手数ですがお問い合わせください");
+        back(locale, code, email, "refund_failed");
       }
     }
   }
@@ -74,9 +79,18 @@ export async function confirmCancel(formData: FormData) {
     .eq("id", resv!.id);
 
   // 通知（失敗しても止めない）
-  const name = [cust?.last_name, cust?.first_name].filter(Boolean).join(" ") || "お客";
+  // 名前未登録のときの既定値。お客様宛メールの宛名に出るので言語を合わせる。
+  const name =
+    [cust?.last_name, cust?.first_name].filter(Boolean).join(" ") ||
+    (locale === "en" ? "Guest" : "お客");
   if (custEmail) {
-    await sendEmail({ to: custEmail, subject: `【SUGOMORI】キャンセル受付（${code}）`, html: cancellationHtml({ name, code, refund: refundAmount }) }).catch(() => {});
+    await sendEmail({
+      to: custEmail,
+      subject: cancellationSubject(code, locale),
+      html: cancellationHtml({ name, code, refund: refundAmount, locale }),
+    })
+      .then(async (ok) => { if (!ok) await notifyFailure("キャンセル案内メール", "送信に失敗", { 予約: code, 宛先: custEmail }); })
+      .catch((e) => notifyFailure("キャンセル案内メール", e, { 予約: code }));
   }
   await notifyOwner(cancellationMessage({ code, name, category, reason, refund: refundAmount })).catch(() => {});
   const owners = ownerEmails();
@@ -92,5 +106,10 @@ export async function confirmCancel(formData: FormData) {
   const eventId = (resv as { gcal_event_id?: string | null }).gcal_event_id;
   if (eventId) await gcalDeleteEvent(eventId).catch(() => {});
 
-  redirect(`/reserve/cancel/done?code=${code}`);
+  // キャンセル後も入れてしまわないよう、ドアPINを無効化する
+  await revokeDoorPin(resv.id as string).catch((e) =>
+    console.error("ドアPINの無効化に失敗:", e),
+  );
+
+  redirect(`${localePath(locale, "/reserve/cancel/done")}?code=${code}`);
 }

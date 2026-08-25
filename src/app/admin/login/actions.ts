@@ -1,33 +1,24 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
 
 export async function login(formData: FormData) {
-  const username = String(formData.get("username") ?? "");
+  const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
   const redirectTo = String(formData.get("redirect") ?? "/admin");
 
-  if (
-    username !== process.env.ADMIN_USERNAME ||
-    password !== process.env.ADMIN_PASSWORD
-  ) {
-    redirect(`/admin/login?error=${encodeURIComponent("ユーザーIDまたはパスワードが違います")}&redirect=${encodeURIComponent(redirectTo)}`);
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    redirect(`/admin/login?error=${encodeURIComponent(error.message)}`);
   }
-
-  const cookieStore = await cookies();
-  cookieStore.set("admin_token", process.env.ADMIN_SESSION_SECRET!, {
-    httpOnly: true,
-    path: "/",
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 30,
-  });
-
   redirect(redirectTo);
 }
 
 export async function logout() {
-  const cookieStore = await cookies();
-  cookieStore.delete("admin_token");
+  const supabase = await createClient();
+  await supabase.auth.signOut();
   redirect("/admin/login");
 }

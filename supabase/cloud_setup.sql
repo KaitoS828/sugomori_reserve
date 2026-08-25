@@ -1,8 +1,8 @@
--- SUGOMORI予約システム クラウドSupabase 一括セットアップ
+-- nissei予約システム クラウドSupabase 一括セットアップ
 -- Dashboard → SQL Editor に貼り付けて Run してください
 
 -- ===== 0001_init.sql =====
--- SUGOMORI予約システム 初期スキーマ (design.md §6)
+-- nissei予約システム 初期スキーマ (design.md §6)
 -- 命名は snake_case。全テーブルに id/created_at/updated_at を持たせる。
 
 create extension if not exists "pgcrypto";
@@ -327,8 +327,8 @@ create policy reservations_self_read on reservations
 
 insert into facility (name, address, phone, check_in_time, check_out_time, cancel_policy)
 values (
-  'SUGOMORI トレイルハウス',
-  '北海道広尾郡大樹町下大樹',
+  'nissei サウナ宿',
+  '北海道広尾郡広尾町',
   '',
   '15:00',
   '10:00',
@@ -339,8 +339,8 @@ values (
 with rt as (
   insert into room_types (name, description, capacity, base_price, sort_order)
   values
-    ('スタンダード', 'スタンダードルーム', 2, 18000, 1),
-    ('デラックス',   'デラックスルーム', 4, 32000, 2)
+    ('スタンダード', 'サウナ付きスタンダードルーム', 2, 18000, 1),
+    ('デラックス',   '貸切サウナ付きデラックスルーム', 4, 32000, 2)
   returning id, name
 )
 -- サンプル客室
@@ -356,5 +356,5 @@ join (values
 -- サンプル宿泊プラン
 insert into plans (name, description, meal_type, sort_order)
 values
-  ('素泊まり', 'お食事なし・一棟貸切', 'none', 1),
+  ('素泊まり', '食事なし・サウナ利用込み', 'none', 1),
   ('朝食付き', '地元食材の朝食付き', 'breakfast', 2);

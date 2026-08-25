@@ -22,11 +22,24 @@ export default async function AccountPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/account/login");
 
-  // RLS により自分の予約のみ取得
-  const { data } = await supabase
-    .from("reservations")
-    .select("code, check_in, check_out, nights, num_guests, amount, status, plans(name)")
-    .order("check_in", { ascending: false });
+  // Step 1: 自分の customer レコードを取得（RLS: auth_user_id = auth.uid() でフィルタ済）
+  const { data: customer } = await supabase
+    .from("customers")
+    .select("id")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+
+  // Step 2: 多層防御 — customer_id を明示的に指定し RLS のバックアップとする
+  // customer が存在しない場合は空配列を返す（他人の予約は絶対に返さない）
+  const { data } = customer
+    ? await supabase
+        .from("reservations")
+        .select("code, check_in, check_out, nights, num_guests, amount, status, plans(name)")
+        .eq("customer_id", customer.id)
+        .is("archived_at", null)
+        .order("check_in", { ascending: false })
+    : { data: [] };
+
   const reservations = (data ?? []) as unknown as MyResv[];
 
   return (
@@ -41,7 +54,7 @@ export default async function AccountPage() {
 
       <div className="flex items-center justify-between">
         <h2 className="font-semibold text-gray-900">予約履歴</h2>
-        <Link href="/reserve" className="rounded-full bg-[#d46a2a] px-4 py-2 text-sm font-medium text-white hover:bg-[#d46a2a]">新しく予約する</Link>
+        <Link href="/reserve" className="rounded-full bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500">新しく予約する</Link>
       </div>
 
       <div className="space-y-3">
@@ -57,7 +70,7 @@ export default async function AccountPage() {
               <span className="font-semibold">¥{r.amount.toLocaleString()}</span>
             </div>
             <div className="mt-2 flex gap-3 text-xs">
-              <Link href={`/reserve/lookup?code=${r.code}&email=${encodeURIComponent(user.email ?? "")}`} className="text-[#b8571f] hover:underline">詳細・キャンセル</Link>
+              <Link href={`/reserve/lookup?code=${r.code}&email=${encodeURIComponent(user.email ?? "")}`} className="text-teal-700 hover:underline">詳細・キャンセル</Link>
             </div>
           </div>
         ))}

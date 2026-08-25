@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "利用規約 | 一棟貸し宿「SUGOMORI」",
+  title: "利用規約",
 };
 
 export default function TermsPage() {
@@ -101,7 +101,7 @@ function OperatorInfo() {
       <dl className="space-y-1">
         <div className="flex gap-2"><dt className="w-20 shrink-0 text-gray-500">名称</dt><dd>一棟貸し宿「SUGOMORI」</dd></div>
         <div className="flex gap-2"><dt className="w-20 shrink-0 text-gray-500">所在地</dt><dd>北海道広尾郡大樹町下大樹</dd></div>
-        <div className="flex gap-2"><dt className="w-20 shrink-0 text-gray-500">連絡先</dt><dd><a href="tel:08058304957" className="text-[#b8571f] underline">080-5830-4957</a></dd></div>
+        <div className="flex gap-2"><dt className="w-20 shrink-0 text-gray-500">連絡先</dt><dd><a href="tel:08058304957" className="text-teal-700 underline">080-5830-4957</a></dd></div>
       </dl>
     </section>
   );

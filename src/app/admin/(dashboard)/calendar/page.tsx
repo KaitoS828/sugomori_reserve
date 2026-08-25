@@ -1,15 +1,19 @@
+import { SubmitButton } from "@/components/SubmitButton";
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { ReservationWithRefs, RoomType, Plan, Customer } from "@/types/db";
 import { OCCUPYING_STATUSES } from "@/lib/availability";
-import { createReservation } from "../reservations/actions";
+import { formatCheckInTime } from "@/lib/reservations";
+import { createReservation, syncGcalFromReservations } from "../reservations/actions";
+import { toggleBlockedDate } from "../blocked/actions";
+import { syncIcalFromAnywhere } from "../ical/actions";
 import { CustomerPicker } from "../reservations/CustomerPicker";
 import { DateField } from "../reservations/DateField";
 
 export const dynamic = "force-dynamic";
 
 const field =
-  "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-cyan-400";
+  "w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none focus:border-cyan-600";
 
 function ymd(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -28,9 +32,9 @@ const WEEK = ["日", "月", "火", "水", "木", "金", "土"];
 export default async function CalendarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; new?: string; error?: string; selected?: string }>;
+  searchParams: Promise<{ month?: string; new?: string; error?: string; done?: string }>;
 }) {
-  const { month, new: newDate, error, selected } = await searchParams;
+  const { month, new: newDate, error, done } = await searchParams;
   const now = new Date();
   let year = now.getFullYear();
   let month0 = now.getMonth();
@@ -47,28 +51,21 @@ export default async function CalendarPage({
   const rangeTo = ymd(new Date(year, month0, daysInMonth + 1)); // 翌月1日
 
   const supabase = createAdminClient();
-  const [{ count: roomCount }, { data: resData }, { data: blockedData }, { data: selectedRes }] =
+  const [{ count: roomCount }, { data: resData }, { data: blockedData }] =
     await Promise.all([
       supabase.from("rooms").select("id", { count: "exact", head: true }).eq("is_active", true),
       supabase
         .from("reservations")
-        .select("*, customers(id,last_name,first_name), room_types(id,name), rooms(id,name), plans(id,name)")
+        .select("*, customers(id,last_name,first_name,email), room_types(id,name), rooms(id,name), plans(id,name)")
         .in("status", OCCUPYING_STATUSES as unknown as string[])
         .is("archived_at", null)
         .lt("check_in", rangeTo)
         .gt("check_out", rangeFrom),
       supabase
         .from("blocked_dates")
-        .select("start_date, end_date, room_type_id")
+        .select("start_date, end_date, room_type_id, reason")
         .lte("start_date", rangeTo)
         .gte("end_date", rangeFrom),
-      selected
-        ? supabase
-            .from("reservations")
-            .select("*, customers(id,last_name,first_name,last_name_kana,first_name_kana,email,phone,prefecture,city,address,building), room_types(id,name), rooms(id,name), plans(id,name)")
-            .eq("id", selected)
-            .single()
-        : Promise.resolve({ data: null }),
     ]);
 
   const totalRooms = roomCount ?? 0;
@@ -92,18 +89,33 @@ export default async function CalendarPage({
   }
 
   // 各日のデータを作る
-  type DayCell = { date: string; day: number; resv: ReservationWithRefs[]; avail: number; isBlocked: boolean };
+  type DayCell = {
+    date: string;
+    day: number;
+    resv: ReservationWithRefs[];
+    avail: number;
+    isBlocked: boolean;
+    blockReason: string | null;
+  };
   const cells: (DayCell | null)[] = [];
   for (let i = 0; i < leadingBlanks; i++) cells.push(null);
   for (let day = 1; day <= daysInMonth; day++) {
     const date = ymd(new Date(year, month0, day));
     const resv = reservations.filter((r) => r.check_in <= date && date < r.check_out);
     const dayBlocked = blocked.filter((b) => b.start_date <= date && date <= b.end_date);
-    const globalBlocked = dayBlocked.some((b) => b.room_type_id === null);
+    const globalBlock = dayBlocked.find((b) => b.room_type_id === null);
+    const globalBlocked = !!globalBlock;
     const avail = globalBlocked
       ? 0
       : Math.max(0, totalRooms - resv.length - dayBlocked.length);
-    cells.push({ date, day, resv, avail, isBlocked: globalBlocked });
+    cells.push({
+      date,
+      day,
+      resv,
+      avail,
+      isBlocked: globalBlocked,
+      blockReason: globalBlock?.reason ?? null,
+    });
   }
   while (cells.length % 7 !== 0) cells.push(null);
 
@@ -114,27 +126,50 @@ export default async function CalendarPage({
 
   return (
     <div className="space-y-6">
-      <header className="flex items-center justify-between">
+      <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">予約カレンダー</h1>
-          <p className="mt-1 text-sm text-gray-500">各日の予約と空き室数（全{totalRooms}室）</p>
+          <p className="mt-1 text-sm text-gray-600">
+            各日の予約と空き室数（全{totalRooms}室）／「× 予約不可に設定」で休業日にできます
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Link href={`/admin/calendar?month=${monthStr(prev.year, prev.month0)}`} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100">← 前月</Link>
-          <span className="min-w-28 text-center font-medium text-gray-900">{year}年{month0 + 1}月</span>
-          <Link href={`/admin/calendar?month=${monthStr(next.year, next.month0)}`} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100">翌月 →</Link>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <form action={syncIcalFromAnywhere}>
+            <input type="hidden" name="redirect_to" value={`/admin/calendar?month=${monthStr(year, month0)}`} />
+            <SubmitButton className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 shadow-sm transition hover:text-cyan-800">
+              <span>🔄</span>
+              <span>iCal手動取り込み</span>
+            </SubmitButton>
+          </form>
+
+          <form action={syncGcalFromReservations}>
+            <input type="hidden" name="redirect_to" value={`/admin/calendar?month=${monthStr(year, month0)}`} />
+            <SubmitButton className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 shadow-sm transition hover:text-cyan-800">
+              <span>📅</span>
+              <span>Googleカレンダー手動同期</span>
+            </SubmitButton>
+          </form>
+
+          <div className="flex items-center gap-1 border-l border-gray-200 pl-2.5">
+            <Link href={`/admin/calendar?month=${monthStr(prev.year, prev.month0)}`} className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100">← 前月</Link>
+            <span className="min-w-24 text-center text-sm font-semibold text-gray-900">{year}年{month0 + 1}月</span>
+            <Link href={`/admin/calendar?month=${monthStr(next.year, next.month0)}`} className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100">翌月 →</Link>
+          </div>
         </div>
       </header>
 
       {error && (
-        <p className="rounded-lg bg-red-950/60 px-3 py-2 text-sm text-red-300">{error}</p>
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+      )}
+      {done && (
+        <p className="rounded-lg bg-cyan-50 px-3 py-2 text-sm text-cyan-800">{done}</p>
       )}
 
       {showNewForm && (
-        <div className="rounded-2xl border border-cyan-900/60 bg-white p-5">
+        <div className="rounded-2xl border border-cyan-200 bg-white p-5">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-medium text-gray-900">＋ {newDate} の予約を登録</h2>
-            <Link href={`/admin/calendar?month=${monthStr(year, month0)}`} className="text-sm text-gray-500 hover:text-gray-200">閉じる</Link>
+            <Link href={`/admin/calendar?month=${monthStr(year, month0)}`} className="text-sm text-gray-600 hover:text-gray-800">閉じる</Link>
           </div>
           <form action={createReservation} className="grid grid-cols-1 gap-3 md:grid-cols-4">
             <input type="hidden" name="redirect_to" value={`/admin/calendar?month=${monthStr(year, month0)}`} />
@@ -145,7 +180,7 @@ export default async function CalendarPage({
               }))}
             />
             <label className="space-y-1">
-              <span className="text-xs text-gray-500">客室タイプ *</span>
+              <span className="text-xs text-gray-600">客室タイプ *</span>
               <select name="room_type_id" required className={field}>
                 {roomTypes.map((t) => (
                   <option key={t.id} value={t.id}>{t.name}</option>
@@ -153,7 +188,7 @@ export default async function CalendarPage({
               </select>
             </label>
             <label className="space-y-1">
-              <span className="text-xs text-gray-500">プラン</span>
+              <span className="text-xs text-gray-600">プラン</span>
               <select name="plan_id" className={field} defaultValue="">
                 <option value="">（未指定）</option>
                 {planList.map((p) => (
@@ -164,89 +199,99 @@ export default async function CalendarPage({
             <DateField name="check_in" label="チェックイン *" defaultValue={newDate} />
             <DateField name="check_out" label="チェックアウト *" defaultValue={nextDay(newDate!)} />
             <label className="space-y-1">
-              <span className="text-xs text-gray-500">人数</span>
+              <span className="text-xs text-gray-600">人数</span>
               <input type="number" name="num_guests" min={1} defaultValue={1} className={field} />
             </label>
             <label className="space-y-1">
-              <span className="text-xs text-gray-500">金額（空欄=自動計算）</span>
+              <span className="text-xs text-gray-600">金額（空欄=自動計算）</span>
               <input type="number" name="amount" min={0} placeholder="基本料金×泊数" className={field} />
             </label>
             <input name="note" placeholder="メモ（任意）" className={`${field} md:col-span-3`} />
-            <button className="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-medium text-gray-950 transition hover:bg-cyan-600">登録</button>
+            <SubmitButton className="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-cyan-700">登録</SubmitButton>
           </form>
         </div>
       )}
 
-      <div className="grid grid-cols-7 gap-px overflow-hidden rounded-2xl border border-gray-200 bg-gray-100">
+      <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+        <div className="grid min-w-[52rem] grid-cols-7 gap-px overflow-hidden rounded-2xl border border-gray-200 bg-gray-100">
         {WEEK.map((w, i) => (
-          <div key={w} className={`bg-gray-50 px-2 py-2 text-center text-xs font-medium ${i === 0 ? "text-red-400" : i === 6 ? "text-cyan-600" : "text-gray-500"}`}>
+          <div key={w} className={`bg-white px-2 py-2.5 text-center text-sm font-medium ${i === 0 ? "text-red-600" : i === 6 ? "text-cyan-700" : "text-gray-600"}`}>
             {w}
           </div>
         ))}
         {cells.map((cell, i) => {
-          if (!cell) return <div key={i} className="min-h-28 bg-white/40" />;
+          if (!cell) return <div key={i} className="min-h-36 bg-gray-100" />;
           const isToday = cell.date === todayStr;
+          const isPast = cell.date < todayStr;
           return (
-            <div key={i} className={`min-h-28 space-y-1 bg-gray-50/60 p-1.5 ${isToday ? "ring-1 ring-inset ring-cyan-400" : ""}`}>
+            <div
+              key={i}
+              className={`min-h-36 space-y-1 p-2 ${
+                isPast
+                  ? "bg-[repeating-linear-gradient(45deg,#f8fafc_0px,#f8fafc_5px,#e9edf2_5px,#e9edf2_10px)]"
+                  : "bg-white"
+              } ${isToday ? "ring-2 ring-inset ring-cyan-500" : ""}`}
+            >
               <div className="flex items-center justify-between">
-                <span className={`text-xs ${isToday ? "font-bold text-cyan-600" : "text-gray-500"}`}>{cell.day}</span>
-                {cell.isBlocked ? (
-                  <span className="rounded bg-red-950 px-1 text-[10px] text-red-400">休</span>
-                ) : (
-                  <span className={`rounded px-1 text-[10px] ${cell.avail === 0 ? "bg-red-950 text-red-400" : "bg-gray-100 text-gray-500"}`}>空{cell.avail}</span>
-                )}
+                <span
+                  className={`text-sm ${
+                    isToday
+                      ? "font-bold text-cyan-700"
+                      : isPast
+                        ? "text-gray-400 line-through"
+                        : "font-medium text-gray-700"
+                  }`}
+                >
+                  {cell.day}
+                </span>
+                <span
+                  className={`rounded px-1.5 py-0.5 text-[11px] ${
+                    isPast
+                      ? "bg-gray-100 text-gray-400"
+                      : cell.isBlocked || cell.avail === 0
+                        ? "bg-red-50 text-red-600"
+                        : "bg-gray-100 text-gray-600"
+                  }`}
+                  title={cell.isBlocked ? (cell.blockReason ?? "休業") : undefined}
+                >
+                  {cell.isBlocked ? "休" : `空${cell.avail}`}
+                </span>
               </div>
               {cell.resv.slice(0, 3).map((r) => (
-                <Link key={r.id} href={`/admin/calendar?month=${monthStr(year, month0)}&selected=${r.id}`} className={`block truncate rounded px-1 py-0.5 text-[10px] hover:bg-cyan-900/60 ${selected === r.id ? "bg-cyan-700/80 text-white" : "bg-cyan-50/60 text-cyan-200"}`}>
+                // セルが狭いのでメールは title に入れる（ホバーで確認できる）
+                <Link key={r.id} href="/admin/reservations" title={[r.code, [r.customers?.last_name, r.customers?.first_name].filter(Boolean).join(" "), r.customers?.email].filter(Boolean).join(" / ")} className={`block truncate rounded px-1.5 py-1 text-xs transition ${isPast ? "bg-gray-100 text-gray-500 hover:bg-gray-200" : "bg-cyan-50 text-cyan-800 hover:bg-cyan-100"}`}>
+                  {r.check_in === cell.date && r.check_in_time && (
+                    <span className="font-mono font-medium">{formatCheckInTime(r.check_in_time)} </span>
+                  )}
                   {r.rooms?.name ? `${r.rooms.name} ` : ""}
                   {r.customers ? [r.customers.last_name, r.customers.first_name].filter(Boolean).join("") || "予約" : "予約"}
                 </Link>
               ))}
               {cell.resv.length > 3 && (
-                <span className="text-[10px] text-gray-500">+{cell.resv.length - 3}件</span>
+                <span className="text-xs text-gray-500">+{cell.resv.length - 3}件</span>
               )}
-              <Link href={`/admin/calendar?month=${monthStr(year, month0)}&new=${cell.date}`} className="block rounded px-1 py-0.5 text-[10px] text-gray-500 transition hover:bg-gray-100 hover:text-cyan-300">＋ 予約</Link>
+              <Link href={`/admin/calendar?month=${monthStr(year, month0)}&new=${cell.date}`} className="block rounded px-1.5 py-1 text-xs text-gray-500 transition hover:bg-gray-100 hover:text-cyan-700">＋ 予約</Link>
+              {!isPast && (
+                <form action={toggleBlockedDate}>
+                  <input type="hidden" name="date" value={cell.date} />
+                  <input type="hidden" name="redirect_to" value={`/admin/calendar?month=${monthStr(year, month0)}`} />
+                  <SubmitButton
+                    className={`w-full justify-start rounded px-1.5 py-1 text-left text-xs transition ${
+                      cell.isBlocked
+                        ? "text-red-600 hover:bg-red-50"
+                        : "text-gray-500 hover:bg-red-50 hover:text-red-700"
+                    }`}
+                    pendingLabel="更新中"
+                  >
+                    {cell.isBlocked ? "↩ 予約可に戻す" : "× 予約不可に設定"}
+                  </SubmitButton>
+                </form>
+              )}
             </div>
           );
         })}
+        </div>
       </div>
-
-      {selectedRes && (() => {
-        const sr = selectedRes as unknown as ReservationWithRefs;
-        const c = sr.customers;
-        const custName = c ? [c.last_name, c.first_name].filter(Boolean).join(" ") || "（無名）" : "—";
-        return (
-          <div className="rounded-2xl border border-cyan-900/60 bg-white p-5 shadow-sm">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-medium text-gray-900">予約詳細 — {custName} 様</h2>
-              <Link href={`/admin/calendar?month=${monthStr(year, month0)}`} className="text-sm text-gray-400 hover:text-gray-600">✕ 閉じる</Link>
-            </div>
-            <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 md:grid-cols-4 mb-4">
-              <span>予約番号: <strong className="text-gray-900">{sr.code}</strong></span>
-              <span>日程: <strong className="text-gray-900">{sr.check_in} 〜 {sr.check_out}（{sr.nights}泊）</strong></span>
-              <span>人数: <strong className="text-gray-900">{sr.num_guests}名</strong></span>
-              <span>金額: <strong className="text-gray-900">¥{sr.amount.toLocaleString()}</strong></span>
-              <span>プラン: <strong className="text-gray-900">{sr.plans?.name ?? "—"}</strong></span>
-              <span>客室: <strong className="text-gray-900">{sr.rooms?.name ?? "—"}</strong></span>
-              <span>経路: <strong className="text-gray-900">{sr.source}</strong></span>
-              <span>支払: <strong className="text-gray-900">{sr.payment_status}</strong></span>
-            </div>
-            {c && (
-              <div className="rounded-lg border border-gray-100 bg-gray-50 p-4 text-sm">
-                <p className="mb-2 font-medium text-gray-700">予約者情報</p>
-                <dl className="grid grid-cols-1 gap-x-6 gap-y-1.5 md:grid-cols-2">
-                  <div className="flex gap-2"><dt className="w-28 shrink-0 text-gray-400">氏名（カナ）</dt><dd className="text-gray-900">{[c.last_name_kana, c.first_name_kana].filter(Boolean).join(" ") || "—"}</dd></div>
-                  <div className="flex gap-2"><dt className="w-28 shrink-0 text-gray-400">メール</dt><dd>{c.email ? <a href={`mailto:${c.email}`} className="text-cyan-600 hover:underline">{c.email}</a> : "—"}</dd></div>
-                  <div className="flex gap-2"><dt className="w-28 shrink-0 text-gray-400">電話</dt><dd>{c.phone ? <a href={`tel:${c.phone}`} className="text-cyan-600 hover:underline">{c.phone}</a> : "—"}</dd></div>
-                  {sr.check_in_time && <div className="flex gap-2"><dt className="w-28 shrink-0 text-gray-400">到着予定</dt><dd className="text-gray-900">{sr.check_in_time}</dd></div>}
-                  <div className="flex gap-2 md:col-span-2"><dt className="w-28 shrink-0 text-gray-400">住所</dt><dd className="text-gray-900">{[c.prefecture, c.city, c.address, c.building].filter(Boolean).join(" ") || "—"}</dd></div>
-                  {sr.survey && <div className="flex gap-2 md:col-span-2"><dt className="w-28 shrink-0 text-gray-400">ご要望</dt><dd className="whitespace-pre-wrap text-gray-900">{sr.survey}</dd></div>}
-                </dl>
-              </div>
-            )}
-          </div>
-        );
-      })()}
     </div>
   );
 }
