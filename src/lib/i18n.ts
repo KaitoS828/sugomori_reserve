@@ -209,7 +209,7 @@ type Dict = {
 };
 
 const ja: Dict = {
-  site: { name: "一棟貸し宿「SUGOMORI」", about: "About Us", terms: "利用規約", privacy: "プライバシーポリシー", faq: "よくある質問" },
+  site: { name: "【一棟貸】トレイルハウスSUGOMORI", about: "About Us", terms: "利用規約", privacy: "プライバシーポリシー", faq: "よくある質問" },
   nav: { reserve: "予約", lookup: "予約照会", checkin: "チェックイン", account: "マイページ", login: "ログイン" },
   reserve: {
     location: "所在地", contact: "お問い合わせ",

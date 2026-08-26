@@ -2,7 +2,7 @@
 // 予約システムの説明ではなく「宿の紹介」を書く。検索した人が読むのはこちら。
 
 export const SITE = {
-  name: "一棟貸し宿「SUGOMORI」",
+  name: "【一棟貸】トレイルハウスSUGOMORI",
   shortName: "トレイルハウス SUGOMORI",
   tagline: "北海道・大樹町の焚き火とBBQを楽しむ一棟貸しトレイルハウス",
   description:
