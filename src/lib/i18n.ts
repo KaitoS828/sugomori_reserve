@@ -87,7 +87,7 @@ type Dict = {
   site: { name: string; about: string; terms: string; privacy: string; faq: string };
   nav: { reserve: string; lookup: string; checkin: string; account: string; login: string };
   reserve: {
-    location: string; contact: string; noPlans: string;
+    location: string; contact: string; noPlans: string; prefillUnavailable: string;
     prevYear: string; prevMonth: string; nextMonth: string; nextYear: string;
     monthLabel: (year: number, month0: number) => string;
     weekdays: string[];
@@ -214,6 +214,7 @@ const ja: Dict = {
   reserve: {
     location: "所在地", contact: "お問い合わせ",
     noPlans: "現在ご予約いただけるプランがありません。",
+    prefillUnavailable: "指定の日程は空室がございません。カレンダーから空いている日程をお選びください。",
     prevYear: "前の年", prevMonth: "前の月", nextMonth: "次の月", nextYear: "次の年",
     monthLabel: (y, m) => `${y}年${m + 1}月`,
     weekdays: ["日", "月", "火", "水", "木", "金", "土"],
@@ -433,6 +434,7 @@ const en: Dict = {
   reserve: {
     location: "Address", contact: "Contact",
     noPlans: "There are no plans available for booking at the moment.",
+    prefillUnavailable: "Sorry, those dates are not available. Please choose an open date from the calendar.",
     prevYear: "Previous year", prevMonth: "Previous month", nextMonth: "Next month", nextYear: "Next year",
     monthLabel: (y, m) =>
       `${["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][m]} ${y}`,

@@ -89,6 +89,7 @@ export function ReserveCalendar({
   const [guests, setGuests] = useState(validGuests);
   const [baseYear, setBaseYear] = useState(initialView.getFullYear());
   const [baseMonth, setBaseMonth] = useState(initialView.getMonth());
+  const [prefillUnavailable, setPrefillUnavailable] = useState(false);
 
   useEffect(() => {
     const end = new Date(now.getFullYear(), now.getMonth() + 13, 1);
@@ -107,6 +108,19 @@ export function ReserveCalendar({
 
   const isBooked = (date: string) => loaded && (avail[date] ?? 1) <= 0;
   const disabled = (date: string) => date < today || isBooked(date);
+
+  // URLパラメータで事前入力された日程が、実際の空き状況(avail読み込み後)では
+  // 予約不可だった場合、選択を解除して「空室がございません」の案内を出す。
+  useEffect(() => {
+    if (!loaded || !validFrom) return;
+    const rangeOk = validTo ? nightsBetween(validFrom, validTo).every((n) => (avail[n] ?? 1) > 0) : true;
+    if (disabled(validFrom) || !rangeOk) {
+      setFrom(null);
+      setTo(null);
+      setPrefillUnavailable(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded]);
 
   function onClickDay(date: string) {
     if (disabled(date)) return;
@@ -155,6 +169,9 @@ export function ReserveCalendar({
 
   return (
     <div className="space-y-4">
+      {prefillUnavailable && (
+        <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">{t.prefillUnavailable}</p>
+      )}
       {/* カレンダー */}
       <div className="rounded-2xl border border-gray-200 p-4 shadow-sm sm:p-6">
         {/* ナビ: 前年/前月  月  翌月/翌年 */}
