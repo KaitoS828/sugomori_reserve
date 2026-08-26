@@ -193,9 +193,9 @@ export function ReserveCalendar({
                     "flex h-10 w-10 items-center justify-center rounded-full text-sm transition sm:h-11 sm:w-11",
                     off
                       ? "cursor-not-allowed text-gray-300 line-through decoration-gray-300"
-                      : "text-gray-800 hover:bg-teal-50 active:bg-teal-100",
-                    sel ? "bg-teal-600 font-bold text-white hover:bg-teal-600" : "",
-                    range ? "bg-teal-100" : "",
+                      : "text-gray-800 hover:bg-brand-50 active:bg-brand-100",
+                    sel ? "bg-brand-600 font-bold text-white hover:bg-brand-600" : "",
+                    range ? "bg-brand-100" : "",
                   ].join(" ")}
                 >
                   {d}
@@ -208,7 +208,7 @@ export function ReserveCalendar({
         {/* 凡例 */}
         <div className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1 border-t border-gray-100 pt-3 text-xs">
           <span className="flex items-center gap-1 text-gray-500">
-            <span className="inline-block h-3 w-3 rounded-full bg-teal-600" /> {t.legendSelected}
+            <span className="inline-block h-3 w-3 rounded-full bg-brand-600" /> {t.legendSelected}
           </span>
           <span className="flex items-center gap-1 text-gray-500">
             <span className="inline-block h-3 w-3 rounded-full border border-gray-300" /> {t.legendAvailable}
@@ -231,7 +231,7 @@ export function ReserveCalendar({
             <span className="font-semibold text-gray-900">{to ?? "—"}</span>
           </div>
           {nights > 0 && (
-            <span className="rounded-full bg-teal-50 px-2 py-0.5 text-sm text-teal-700">{t.nightCount(nights)}</span>
+            <span className="rounded-full bg-brand-50 px-2 py-0.5 text-sm text-brand-700">{t.nightCount(nights)}</span>
           )}
           <label className="ml-auto flex items-center gap-2 text-sm">
             <span className="text-gray-500">
@@ -241,7 +241,7 @@ export function ReserveCalendar({
             <select
               value={guests}
               onChange={(e) => setGuests(Number(e.target.value))}
-              className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 font-medium text-gray-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20"
+              className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 font-medium text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
             >
               {Array.from({ length: maxGuests }, (_, i) => i + 1).map((n) => (
                 <option key={n} value={n}>{t.guestOption(n)}</option>
@@ -303,7 +303,7 @@ export function ReserveCalendar({
                       <p className="mt-1 text-xs text-gray-500">
                         {t.nightsTaxIncl(price.nights)}
                         {price.discountRate > 0 && (
-                          <span className="ml-1 text-teal-700">{t.longStayApplied(Math.round(price.discountRate * 100))}</span>
+                          <span className="ml-1 text-brand-700">{t.longStayApplied(Math.round(price.discountRate * 100))}</span>
                         )}
                       </p>
                       <p className="text-xl font-bold text-gray-900">
@@ -330,7 +330,7 @@ export function ReserveCalendar({
                 ) : from && to ? (
                   <Link
                     href={`${localePath(locale, `/reserve/${p.id}`)}?${query.toString()}`}
-                    className="rounded-full bg-teal-600 px-6 py-2.5 text-center text-sm font-medium text-white transition hover:bg-teal-500"
+                    className="rounded-full bg-brand-600 px-6 py-2.5 text-center text-sm font-medium text-white transition hover:bg-brand-500"
                   >
                     {t.bookTheseDates}
                   </Link>
