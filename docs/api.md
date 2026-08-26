@@ -2,7 +2,7 @@
 
 外部ツール・AIエージェントから空室確認や予約操作を行うための公式ドキュメント。
 
-- ベースURL: `https://sugomori-hokkaido.jp`
+- ベースURL: `https://reserve.sugomori-hokkaido.jp`（`sugomori-hokkaido.jp`は別プロジェクトの紹介LPで、予約システムとは別ドメイン）
 - 対象施設: 一棟貸し宿「SUGOMORI」（1施設・1客室タイプ運用）
 
 ## 認証
@@ -92,13 +92,18 @@ Claude Code / Claude Desktop などのMCP対応クライアントから直接、
 
 利用できるツール: `check_availability` `list_reservations` `get_reservation`
 `quote_cancellation` `cancel_reservation` `block_dates` `unblock_dates`
-`create_reservation` `update_reservation`
+`create_reservation` `update_reservation` `list_ical_sources` `sync_ical`
 （各ツールの説明・引数は `tools/list` で取得できる）
+
+`sync_ical` は Airbnb 等の外部カレンダー（`/admin/ical` に登録済みの連携先）を
+その場で取り込み、`blocked_dates` に反映する。`id` を省略すると有効な連携先を
+すべて同期する。取り込んだ予定は `check_availability` の結果にも反映される
+（`blocked_dates` を経由するため、REST API・MCPどちらからの空室確認にも効く）。
 
 ### Claude Codeから接続する
 
 ```
-claude mcp add --transport http sugomori https://sugomori-hokkaido.jp/api/mcp \
+claude mcp add --transport http sugomori https://reserve.sugomori-hokkaido.jp/api/mcp \
   --header "Authorization: Bearer <EXTERNAL_API_KEY>"
 ```
 
@@ -109,7 +114,7 @@ claude mcp add --transport http sugomori https://sugomori-hokkaido.jp/api/mcp \
 ### 動作確認（curlでの疎通テスト）
 
 ```
-curl -X POST https://sugomori-hokkaido.jp/api/mcp \
+curl -X POST https://reserve.sugomori-hokkaido.jp/api/mcp \
   -H "Authorization: Bearer <EXTERNAL_API_KEY>" \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
