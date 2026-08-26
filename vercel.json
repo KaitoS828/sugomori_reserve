@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/ical/import",
-      "schedule": "0 20 * * *"
+      "schedule": "*/15 * * * *"
     },
     {
       "path": "/api/cron/reminders",
