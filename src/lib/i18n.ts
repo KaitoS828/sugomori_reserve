@@ -182,6 +182,8 @@ type Dict = {
     honorific: (name: string) => string; amount: string;
     forStay: (plan: string) => string; stayDates: string;
     received: string; cannotShow: string; notPaidYet: string; fallbackName: string;
+    taxableAmount: string; taxAmount: string; taxRateNote: string;
+    paymentMethod: string; paymentMethodCard: string; paymentMethodOther: string;
   };
   checkin: {
     title: string; lead: string; showCode: string; verifying: string;
@@ -374,6 +376,9 @@ const ja: Dict = {
     cannotShow: "領収書を表示できませんでした。",
     notPaidYet: "お支払い完了後に領収書を発行できます。",
     fallbackName: "ご宿泊者",
+    taxableAmount: "税抜金額", taxAmount: "消費税額（10%）",
+    taxRateNote: "10%対象",
+    paymentMethod: "お支払方法", paymentMethodCard: "クレジットカード", paymentMethodOther: "現金・その他",
   },
   checkin: {
     title: "チェックイン",
@@ -602,6 +607,9 @@ const en: Dict = {
     cannotShow: "We could not display the receipt.",
     notPaidYet: "The receipt is available once payment is complete.",
     fallbackName: "Guest",
+    taxableAmount: "Subtotal (excl. tax)", taxAmount: "Consumption tax (10%)",
+    taxRateNote: "10% taxable",
+    paymentMethod: "Payment method", paymentMethodCard: "Credit card", paymentMethodOther: "Cash / other",
   },
   checkin: {
     title: "Check-in",

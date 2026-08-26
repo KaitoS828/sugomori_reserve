@@ -565,7 +565,19 @@ function ReservationCard({
                   <span>チェックイン時間: {formatCheckInTime(r.check_in_time)}</span>
                   <span>プラン: {r.plans?.name ?? "—"}</span>
                   <span>経路: {sourceLabel(r.source)}</span>
-                  <span>支払: {paymentLabel(r.payment_status)}</span>
+                  <span>
+                    支払: {paymentLabel(r.payment_status)}
+                    {r.payment_status === "paid" && r.lookup_token && (
+                      <a
+                        href={`/reserve/receipt?code=${r.code}&token=${r.lookup_token}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-2 text-cyan-700 hover:underline"
+                      >
+                        領収書
+                      </a>
+                    )}
+                  </span>
                   <span className="col-span-2">
                     メール:{" "}
                     {r.customers?.email ? (
