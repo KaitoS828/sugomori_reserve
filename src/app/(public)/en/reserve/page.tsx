@@ -29,6 +29,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default function EnReservePage() {
-  return <ReserveScreen locale="en" />;
+export default async function EnReservePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string; to?: string; guests?: string }>;
+}) {
+  const { from, to, guests } = await searchParams;
+  return <ReserveScreen locale="en" from={from} to={to} guests={guests} />;
 }

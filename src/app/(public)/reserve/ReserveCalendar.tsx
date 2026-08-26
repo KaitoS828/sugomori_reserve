@@ -41,18 +41,30 @@ function nightsBetween(from: string, to: string) {
   return out;
 }
 
+// YYYY-MM-DD形式かつ今日以降の日付かを検証する(URLパラメータからの日付事前入力用)。
+function isValidFutureDateStr(s: string | undefined, today: string): s is string {
+  return !!s && /^\d{4}-\d{2}-\d{2}$/.test(s) && s >= today;
+}
+
 export function ReserveCalendar({
   plans,
   roomTypeId,
   maxGuests = 6,
   locale = "ja",
   roomLabel,
+  initialFrom,
+  initialTo,
+  initialGuests,
 }: {
   plans: Plan[];
   roomTypeId: string;
   maxGuests?: number;
   locale?: Locale;
   roomLabel?: string;
+  /** ?from=YYYY-MM-DD&to=YYYY-MM-DD&guests=N によるURL事前入力。不正な値は無視する。 */
+  initialFrom?: string;
+  initialTo?: string;
+  initialGuests?: string;
 }) {
   const t = dict(locale).reserve;
   const room = roomLabel ?? t.roomLabel;
@@ -60,13 +72,23 @@ export function ReserveCalendar({
   const now = new Date();
   const minMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
+  const validFrom = isValidFutureDateStr(initialFrom, today) ? initialFrom : null;
+  const validTo =
+    validFrom && isValidFutureDateStr(initialTo, today) && initialTo! > validFrom ? initialTo! : null;
+  const parsedGuests = initialGuests ? Number(initialGuests) : NaN;
+  const validGuests =
+    Number.isInteger(parsedGuests) && parsedGuests >= 1 && parsedGuests <= maxGuests ? parsedGuests : 1;
+  const initialView = validFrom
+    ? (([y, m]) => new Date(y, m - 1, 1))(validFrom.split("-").map(Number))
+    : now;
+
   const [avail, setAvail] = useState<Record<string, number>>({});
   const [loaded, setLoaded] = useState(false);
-  const [from, setFrom] = useState<string | null>(null);
-  const [to, setTo] = useState<string | null>(null);
-  const [guests, setGuests] = useState(1);
-  const [baseYear, setBaseYear] = useState(now.getFullYear());
-  const [baseMonth, setBaseMonth] = useState(now.getMonth());
+  const [from, setFrom] = useState<string | null>(validFrom);
+  const [to, setTo] = useState<string | null>(validTo);
+  const [guests, setGuests] = useState(validGuests);
+  const [baseYear, setBaseYear] = useState(initialView.getFullYear());
+  const [baseMonth, setBaseMonth] = useState(initialView.getMonth());
 
   useEffect(() => {
     const end = new Date(now.getFullYear(), now.getMonth() + 13, 1);
