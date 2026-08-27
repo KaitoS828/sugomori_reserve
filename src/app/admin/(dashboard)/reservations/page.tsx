@@ -770,6 +770,12 @@ function ReservationCard({
                       </select>
                     </label>
                     <input name="note" defaultValue={r.note ?? ""} placeholder="メモ（任意: 現金受領済、知り合い割引など）" className={`${field} md:col-span-2`} />
+                    <input
+                      name="receipt_name"
+                      defaultValue={r.receipt_name ?? ""}
+                      placeholder="領収書の宛名（任意・空欄なら予約者名）"
+                      className={`${field} md:col-span-2`}
+                    />
                     <SubmitButton className={btnPrimary}>保存</SubmitButton>
                   </form>
                 </EditToggle>
