@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { dict, type Locale } from "@/lib/i18n";
 import { SITE } from "@/lib/site";
@@ -164,7 +165,15 @@ export async function ReceiptScreen({
           <p>{t.paymentMethod}: {paymentMethodLabel}</p>
         </div>
 
-        <div className="mt-8 text-right text-sm text-gray-700 print:mt-auto">
+        <div className="relative mt-8 text-right text-sm text-gray-700 print:mt-auto">
+          {/* ハンコのように住所・電話番号へ重ねる */}
+          <Image
+            src="/receipt-stamp.png"
+            alt=""
+            width={90}
+            height={90}
+            className="pointer-events-none absolute -right-2 top-1 -rotate-6 opacity-90"
+          />
           <p className="font-semibold text-gray-900">{facility?.name}</p>
           <p>{locale === "en" ? SITE.address.fullEn : facility?.address}</p>
           <p>{facility?.phone}</p>
