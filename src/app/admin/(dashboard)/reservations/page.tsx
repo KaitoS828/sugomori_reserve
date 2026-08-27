@@ -565,16 +565,16 @@ function ReservationCard({
                   <span>チェックイン時間: {formatCheckInTime(r.check_in_time)}</span>
                   <span>プラン: {r.plans?.name ?? "—"}</span>
                   <span>経路: {sourceLabel(r.source)}</span>
-                  <span>
+                  <span className="flex items-center gap-2">
                     支払: {paymentLabel(r.payment_status)}
                     {r.payment_status === "paid" && r.lookup_token && (
                       <a
                         href={`/reserve/receipt?code=${r.code}&token=${r.lookup_token}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="ml-2 text-cyan-700 hover:underline"
+                        className="rounded-lg border border-cyan-300 bg-cyan-50/50 px-2.5 py-1 text-xs font-medium text-cyan-800 transition hover:bg-cyan-100"
                       >
-                        領収書
+                        領収書を発行
                       </a>
                     )}
                   </span>
@@ -773,7 +773,7 @@ function ReservationCard({
                     <input
                       name="receipt_name"
                       defaultValue={r.receipt_name ?? ""}
-                      placeholder="領収書の宛名（任意・空欄なら予約者名。「様」「御中」等も含めて入力）"
+                      placeholder="領収書の宛名（任意・空欄なら予約者名。「様」は自動で付きます）"
                       className={`${field} md:col-span-2`}
                     />
                     <SubmitButton className={btnPrimary}>保存</SubmitButton>
