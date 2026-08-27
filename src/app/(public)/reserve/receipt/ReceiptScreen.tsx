@@ -5,7 +5,7 @@ import { PrintButton } from "./PrintButton";
 
 type ReceiptResv = {
   code: string; check_in: string; check_out: string; nights: number;
-  amount: number; payment_status: string; created_at: string;
+  amount: number; payment_status: string; created_at: string; receipt_name: string | null;
   customers: { last_name: string | null; first_name: string | null } | null;
   plans: { name: string } | null;
   payments: { stripe_payment_intent_id: string | null; created_at: string }[] | null;
@@ -39,7 +39,7 @@ export async function ReceiptScreen({
     const { data } = await supabase
       .from("reservations")
       .select(
-        "code, check_in, check_out, nights, amount, payment_status, created_at, customers(last_name, first_name), plans(name), payments(stripe_payment_intent_id, created_at)",
+        "code, check_in, check_out, nights, amount, payment_status, created_at, receipt_name, customers(last_name, first_name), plans(name), payments(stripe_payment_intent_id, created_at)",
       )
       .eq("code", code)
       .eq("lookup_token", token)
@@ -55,7 +55,8 @@ export async function ReceiptScreen({
     return <p className="text-sm text-gray-500">{t.notPaidYet}</p>;
   }
 
-  const name = [resv.customers?.last_name, resv.customers?.first_name].filter(Boolean).join(" ") || t.fallbackName;
+  const guestName = [resv.customers?.last_name, resv.customers?.first_name].filter(Boolean).join(" ") || t.fallbackName;
+  const name = resv.receipt_name?.trim() || guestName;
   const issued = new Date(resv.created_at).toLocaleDateString(locale === "en" ? "en-GB" : "ja-JP");
   const { taxable, tax } = splitTax(resv.amount);
   const latestPayment = [...(resv.payments ?? [])].sort((a, b) =>

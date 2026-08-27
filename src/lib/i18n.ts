@@ -134,6 +134,7 @@ type Dict = {
     memberTitle: string; memberLead: string;
     password: string; passwordConfirm: string; passwordHint: string;
     checkInTime: string;
+    receiptName: string; receiptNamePlaceholder: string; receiptNameHint: string;
     survey: string; surveyPlaceholder: string;
     contact: string; contactPlaceholder: string;
     agreePolicy: { before: string; linkText: string; after: string };
@@ -273,6 +274,9 @@ const ja: Dict = {
     password: "パスワード", passwordConfirm: "パスワード（確認）",
     passwordHint: "6文字以上。空欄のままでも予約できます。",
     checkInTime: "チェックイン予定時刻",
+    receiptName: "領収書の宛名（任意）",
+    receiptNamePlaceholder: "例: 株式会社◯◯",
+    receiptNameHint: "空欄の場合はご予約者名で発行します。",
     survey: "ご要望・アンケート", surveyPlaceholder: "・宿泊の目的\n・ご要望など",
     contact: "連絡事項", contactPlaceholder: "連絡事項がございましたらご入力ください",
     agreePolicy: { before: "", linkText: "キャンセルポリシー", after: "を含む利用規約に同意する" },
@@ -501,6 +505,9 @@ const en: Dict = {
     password: "Password", passwordConfirm: "Password (confirm)",
     passwordHint: "At least 6 characters. Leave blank to book as a guest.",
     checkInTime: "Estimated arrival time",
+    receiptName: "Receipt name (optional)",
+    receiptNamePlaceholder: "e.g. Acme Inc.",
+    receiptNameHint: "Leave blank to issue the receipt under the guest's name.",
     survey: "Requests and comments", surveyPlaceholder: "・Purpose of your stay\n・Any requests",
     contact: "Anything else we should know", contactPlaceholder: "Let us know if there is anything else",
     agreePolicy: { before: "I agree to the terms of use, including the ", linkText: "cancellation policy", after: "." },

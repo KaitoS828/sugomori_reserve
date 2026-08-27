@@ -192,6 +192,13 @@ export async function FormScreen({
 
         <div className="space-y-4 rounded-2xl border border-gray-200 p-6">
           <div className="grid gap-2 md:grid-cols-[160px_1fr]">
+            <span className={label}>{t.receiptName}</span>
+            <div>
+              <input name="receipt_name" placeholder={t.receiptNamePlaceholder} maxLength={100} className={field} />
+              <p className="mt-1 text-xs text-gray-500">{t.receiptNameHint}</p>
+            </div>
+          </div>
+          <div className="grid gap-2 md:grid-cols-[160px_1fr]">
             <span className={label}>{t.survey}</span>
             <textarea name="survey" rows={3} placeholder={t.surveyPlaceholder} className={field} />
           </div>
