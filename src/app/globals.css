@@ -38,3 +38,14 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+/* 領収書などの印刷ページをA4に正確に合わせる。ブラウザ既定の余白に頼らない。 */
+@media print {
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+  body {
+    background: white;
+  }
+}

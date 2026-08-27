@@ -185,6 +185,10 @@ type Dict = {
     received: string; cannotShow: string; notPaidYet: string; fallbackName: string;
     taxableAmount: string; taxAmount: string; taxRateNote: string;
     paymentMethod: string; paymentMethodCard: string; paymentMethodOther: string;
+    no: string; itemCol: string; qtyCol: string; unitCol: string;
+    unitPriceCol: string; amountCol: string; unitLumpSum: string;
+    subtotal: string; taxRow: string; total: string; notes: string;
+    issuedLabel: string; itemName: (plan: string) => string;
   };
   checkin: {
     title: string; lead: string; showCode: string; verifying: string;
@@ -383,6 +387,10 @@ const ja: Dict = {
     taxableAmount: "税抜金額", taxAmount: "消費税額（10%）",
     taxRateNote: "10%対象",
     paymentMethod: "お支払方法", paymentMethodCard: "クレジットカード", paymentMethodOther: "現金・その他",
+    no: "No.", itemCol: "項目", qtyCol: "数量", unitCol: "単位",
+    unitPriceCol: "単価", amountCol: "金額", unitLumpSum: "式",
+    subtotal: "小計", taxRow: "消費税（10%）", total: "合計", notes: "特記事項",
+    issuedLabel: "発行日", itemName: (plan) => `ご宿泊代として（${plan}）`,
   },
   checkin: {
     title: "チェックイン",
@@ -617,6 +625,10 @@ const en: Dict = {
     taxableAmount: "Subtotal (excl. tax)", taxAmount: "Consumption tax (10%)",
     taxRateNote: "10% taxable",
     paymentMethod: "Payment method", paymentMethodCard: "Credit card", paymentMethodOther: "Cash / other",
+    no: "No.", itemCol: "Item", qtyCol: "Qty", unitCol: "Unit",
+    unitPriceCol: "Unit price", amountCol: "Amount", unitLumpSum: "lot",
+    subtotal: "Subtotal", taxRow: "Consumption tax (10%)", total: "Total", notes: "Notes",
+    issuedLabel: "Issued", itemName: (plan) => `Accommodation (${plan})`,
   },
   checkin: {
     title: "Check-in",

@@ -68,57 +68,99 @@ export async function ReceiptScreen({
     ? t.paymentMethodCard
     : t.paymentMethodOther;
 
+  const itemLabel = t.itemName(resv.plans?.name ?? "—");
+  const cellBorder = "border border-gray-900 px-2 py-1";
+
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div className="flex justify-end">
+    <div className="mx-auto max-w-2xl print:mx-0 print:max-w-none">
+      <div className="flex justify-end print:hidden">
         <PrintButton label={t.print} />
       </div>
 
-      <div className="printable rounded-2xl border border-gray-300 bg-white p-10">
-        <h1 className="text-center text-2xl font-bold tracking-widest text-gray-900">{t.title}</h1>
-        <p className="mt-2 text-right text-sm text-gray-500">{t.issuedOn(issued)}</p>
-
-        <div className="mt-8 space-y-1">
-          <p className="border-b border-gray-400 pb-1 text-lg text-gray-900">{honorificName}</p>
+      {/* 角丸なし・罫線ベースの業務用フォーマット。印刷時はA4いっぱいに広げる（@pageの余白はglobals.cssで指定） */}
+      <div className="printable mt-6 border border-gray-900 bg-white p-8 print:mt-0 print:w-full">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <h1 className="text-2xl font-bold tracking-widest text-gray-900">{t.title}</h1>
+          <table className="text-xs text-gray-700">
+            <tbody>
+              <tr>
+                <td className="pr-4 text-gray-500">{t.issuedLabel}</td>
+                <td>{issued}</td>
+              </tr>
+              <tr>
+                <td className="pr-4 text-gray-500">{t.no}</td>
+                <td className="font-mono">{resv.code}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
-        <div className="mt-8 text-center">
-          <p className="text-sm text-gray-500">{t.amount}</p>
-          <p className="text-3xl font-bold text-gray-900">¥{resv.amount.toLocaleString()}-</p>
+        <div className="mt-8 border-b border-gray-900 pb-1">
+          <span className="text-lg text-gray-900">{honorificName}</span>
         </div>
 
-        <p className="mt-6 text-center text-sm text-gray-700">{t.forStay(resv.plans?.name ?? "—")}</p>
+        <div className="mt-6 flex flex-wrap items-center gap-4">
+          <span className="border border-gray-900 px-3 py-1.5 text-sm font-semibold text-gray-900">
+            {t.amount}
+          </span>
+          <span className="text-3xl font-bold text-gray-900">¥{resv.amount.toLocaleString()}-</span>
+        </div>
 
-        <table className="mx-auto mt-8 text-sm text-gray-700">
-          <tbody>
-            <tr><td className="py-1 pr-6 text-gray-500">{c.reservationCode}</td><td className="font-mono">{resv.code}</td></tr>
-            <tr>
-              <td className="py-1 pr-6 text-gray-500">{t.stayDates}</td>
-              <td>{dict(locale).cancel.dateRange(resv.check_in, resv.check_out, resv.nights)}</td>
+        <p className="mt-4 text-sm text-gray-700">{t.forStay(resv.plans?.name ?? "—")}</p>
+
+        <table className="mt-6 w-full border-collapse text-sm text-gray-800">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className={cellBorder}>{t.itemCol}</th>
+              <th className={`${cellBorder} w-16`}>{t.qtyCol}</th>
+              <th className={`${cellBorder} w-16`}>{t.unitCol}</th>
+              <th className={`${cellBorder} w-28 text-right`}>{t.unitPriceCol}</th>
+              <th className={`${cellBorder} w-28 text-right`}>{t.amountCol}</th>
             </tr>
-            <tr><td className="py-1 pr-6 text-gray-500">{t.paymentMethod}</td><td>{paymentMethodLabel}</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className={cellBorder}>{itemLabel}</td>
+              <td className={`${cellBorder} text-center`}>1</td>
+              <td className={`${cellBorder} text-center`}>{t.unitLumpSum}</td>
+              <td className={`${cellBorder} text-right`}>¥{resv.amount.toLocaleString()}</td>
+              <td className={`${cellBorder} text-right`}>¥{resv.amount.toLocaleString()}</td>
+            </tr>
           </tbody>
         </table>
 
-        <table className="mx-auto mt-6 border-t border-gray-200 pt-2 text-sm text-gray-600">
-          <tbody>
-            <tr>
-              <td className="py-1 pr-6 text-gray-500">{t.taxableAmount}</td>
-              <td className="text-right">¥{taxable.toLocaleString()}</td>
-            </tr>
-            <tr>
-              <td className="py-1 pr-6 text-gray-500">
-                {t.taxAmount}
-                <span className="ml-1 text-xs text-gray-400">({t.taxRateNote})</span>
-              </td>
-              <td className="text-right">¥{tax.toLocaleString()}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div className="mt-2 flex justify-end">
+          <table className="border-collapse text-sm text-gray-800">
+            <tbody>
+              <tr>
+                <td className={`${cellBorder} bg-gray-50 text-gray-600`}>{t.subtotal}</td>
+                <td className={`${cellBorder} w-28 text-right`}>¥{taxable.toLocaleString()}</td>
+              </tr>
+              <tr>
+                <td className={`${cellBorder} bg-gray-50 text-gray-600`}>
+                  {t.taxRow}
+                  <span className="ml-1 text-xs text-gray-400">({t.taxRateNote})</span>
+                </td>
+                <td className={`${cellBorder} text-right`}>¥{tax.toLocaleString()}</td>
+              </tr>
+              <tr>
+                <td className={`${cellBorder} bg-gray-50 font-semibold text-gray-900`}>{t.total}</td>
+                <td className={`${cellBorder} text-right font-semibold`}>¥{resv.amount.toLocaleString()}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-        <p className="mt-2 text-center text-xs text-gray-500">{t.received}</p>
+        <p className="mt-4 text-xs text-gray-500">{t.received}</p>
 
-        <div className="mt-10 text-right text-sm text-gray-700">
+        <div className="mt-8 border border-gray-900 p-3 text-xs text-gray-700">
+          <p className="mb-1.5 font-semibold text-gray-900">{t.notes}</p>
+          <p>{c.reservationCode}: {resv.code}</p>
+          <p>{t.stayDates}: {dict(locale).cancel.dateRange(resv.check_in, resv.check_out, resv.nights)}</p>
+          <p>{t.paymentMethod}: {paymentMethodLabel}</p>
+        </div>
+
+        <div className="mt-8 text-right text-sm text-gray-700">
           <p className="font-semibold text-gray-900">{facility?.name}</p>
           <p>{locale === "en" ? SITE.address.fullEn : facility?.address}</p>
           <p>{facility?.phone}</p>
