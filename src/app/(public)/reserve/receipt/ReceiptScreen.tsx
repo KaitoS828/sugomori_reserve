@@ -83,21 +83,39 @@ export async function ReceiptScreen({
       {/* 角丸なし・罫線ベースの業務用フォーマット。印刷時はA4いっぱいに広げ、
           施設情報をページ下端に固定して末尾の無駄な余白を作らない
           （@pageの用紙サイズ・余白はglobals.cssで指定。297mmから上下15mmずつを引いた高さ） */}
-      <div className="printable mt-6 flex flex-col border border-gray-900 bg-white p-8 print:mt-0 print:min-h-[267mm] print:w-full">
+      <div className="printable mt-6 border border-gray-900 bg-white p-8 print:mt-0 print:min-h-[267mm] print:w-full">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <h1 className="text-2xl font-bold tracking-widest text-gray-900">{t.title}</h1>
-          <table className="text-xs text-gray-700">
-            <tbody>
-              <tr>
-                <td className="pr-4 text-gray-500">{t.issuedLabel}</td>
-                <td>{issued}</td>
-              </tr>
-              <tr>
-                <td className="pr-4 text-gray-500">{t.no}</td>
-                <td className="font-mono">{resv.code}</td>
-              </tr>
-            </tbody>
-          </table>
+          <div>
+            <table className="ml-auto text-xs text-gray-700">
+              <tbody>
+                <tr>
+                  <td className="pr-4 text-gray-500">{t.issuedLabel}</td>
+                  <td>{issued}</td>
+                </tr>
+                <tr>
+                  <td className="pr-4 text-gray-500">{t.no}</td>
+                  <td className="font-mono">{resv.code}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            {/* 発行者情報。印鑑は回転なしで宛名ブロックの右端にわずかに重なる程度 */}
+            <div className="mt-3 flex items-start justify-end">
+              <div className="text-left text-base text-gray-700">
+                <p className="text-lg font-semibold text-gray-900">{facility?.name}</p>
+                <p>{locale === "en" ? SITE.address.fullEn : facility?.address}</p>
+                <p>{facility?.phone}</p>
+              </div>
+              <Image
+                src="/receipt-stamp.png"
+                alt=""
+                width={90}
+                height={90}
+                className="-ml-2 shrink-0"
+              />
+            </div>
+          </div>
         </div>
 
         <div className="mt-8 border-b border-gray-900 pb-1">
@@ -163,20 +181,6 @@ export async function ReceiptScreen({
           <p>{c.reservationCode}: {resv.code}</p>
           <p>{t.stayDates}: {dict(locale).cancel.dateRange(resv.check_in, resv.check_out, resv.nights)}</p>
           <p>{t.paymentMethod}: {paymentMethodLabel}</p>
-        </div>
-
-        <div className="relative mt-8 text-right text-sm text-gray-700 print:mt-auto">
-          {/* ハンコのように住所・電話番号へ重ねる */}
-          <Image
-            src="/receipt-stamp.png"
-            alt=""
-            width={90}
-            height={90}
-            className="pointer-events-none absolute -right-2 top-1 -rotate-6 opacity-90"
-          />
-          <p className="font-semibold text-gray-900">{facility?.name}</p>
-          <p>{locale === "en" ? SITE.address.fullEn : facility?.address}</p>
-          <p>{facility?.phone}</p>
         </div>
       </div>
     </div>
