@@ -70,6 +70,8 @@ export async function ReceiptScreen({
 
   const itemLabel = t.itemName(resv.plans?.name ?? "—");
   const cellBorder = "border border-gray-900 px-2 py-1";
+  // 単価は実際の請求額から逆算する（長期割引等があっても表の合計欄は必ず実際の請求額と一致させる）
+  const unitPrice = resv.nights > 0 ? Math.round(resv.amount / resv.nights) : resv.amount;
 
   return (
     <div className="mx-auto max-w-2xl print:mx-0 print:max-w-none">
@@ -77,8 +79,10 @@ export async function ReceiptScreen({
         <PrintButton label={t.print} />
       </div>
 
-      {/* 角丸なし・罫線ベースの業務用フォーマット。印刷時はA4いっぱいに広げる（@pageの余白はglobals.cssで指定） */}
-      <div className="printable mt-6 border border-gray-900 bg-white p-8 print:mt-0 print:w-full">
+      {/* 角丸なし・罫線ベースの業務用フォーマット。印刷時はA4いっぱいに広げ、
+          施設情報をページ下端に固定して末尾の無駄な余白を作らない
+          （@pageの用紙サイズ・余白はglobals.cssで指定。297mmから上下15mmずつを引いた高さ） */}
+      <div className="printable mt-6 flex flex-col border border-gray-900 bg-white p-8 print:mt-0 print:min-h-[267mm] print:w-full">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <h1 className="text-2xl font-bold tracking-widest text-gray-900">{t.title}</h1>
           <table className="text-xs text-gray-700">
@@ -121,9 +125,9 @@ export async function ReceiptScreen({
           <tbody>
             <tr>
               <td className={cellBorder}>{itemLabel}</td>
-              <td className={`${cellBorder} text-center`}>1</td>
-              <td className={`${cellBorder} text-center`}>{t.unitLumpSum}</td>
-              <td className={`${cellBorder} text-right`}>¥{resv.amount.toLocaleString()}</td>
+              <td className={`${cellBorder} text-center`}>{resv.nights}</td>
+              <td className={`${cellBorder} text-center`}>{c.nights}</td>
+              <td className={`${cellBorder} text-right`}>¥{unitPrice.toLocaleString()}</td>
               <td className={`${cellBorder} text-right`}>¥{resv.amount.toLocaleString()}</td>
             </tr>
           </tbody>
@@ -160,7 +164,7 @@ export async function ReceiptScreen({
           <p>{t.paymentMethod}: {paymentMethodLabel}</p>
         </div>
 
-        <div className="mt-8 text-right text-sm text-gray-700">
+        <div className="mt-8 text-right text-sm text-gray-700 print:mt-auto">
           <p className="font-semibold text-gray-900">{facility?.name}</p>
           <p>{locale === "en" ? SITE.address.fullEn : facility?.address}</p>
           <p>{facility?.phone}</p>
