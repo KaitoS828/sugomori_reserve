@@ -56,7 +56,9 @@ export async function ReceiptScreen({
   }
 
   const guestName = [resv.customers?.last_name, resv.customers?.first_name].filter(Boolean).join(" ") || t.fallbackName;
-  const name = resv.receipt_name?.trim() || guestName;
+  // 宛名を直接指定した場合は「様」を自動付与しない（会社名など「御中」を書きたいことがあるため）
+  const customReceiptName = resv.receipt_name?.trim() || null;
+  const honorificName = customReceiptName ?? t.honorific(guestName);
   const issued = new Date(resv.created_at).toLocaleDateString(locale === "en" ? "en-GB" : "ja-JP");
   const { taxable, tax } = splitTax(resv.amount);
   const latestPayment = [...(resv.payments ?? [])].sort((a, b) =>
@@ -77,7 +79,7 @@ export async function ReceiptScreen({
         <p className="mt-2 text-right text-sm text-gray-500">{t.issuedOn(issued)}</p>
 
         <div className="mt-8 space-y-1">
-          <p className="border-b border-gray-400 pb-1 text-lg text-gray-900">{t.honorific(name)}</p>
+          <p className="border-b border-gray-400 pb-1 text-lg text-gray-900">{honorificName}</p>
         </div>
 
         <div className="mt-8 text-center">

@@ -773,7 +773,7 @@ function ReservationCard({
                     <input
                       name="receipt_name"
                       defaultValue={r.receipt_name ?? ""}
-                      placeholder="領収書の宛名（任意・空欄なら予約者名）"
+                      placeholder="領収書の宛名（任意・空欄なら予約者名。「様」「御中」等も含めて入力）"
                       className={`${field} md:col-span-2`}
                     />
                     <SubmitButton className={btnPrimary}>保存</SubmitButton>
