@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Trigger iCal Import API
         run: |
-          response=$(curl -s -w "\n%{http_code}" -X POST "https://sugomori-hokkaido.jp/api/ical/import" \
+          response=$(curl -sSL -w "\n%{http_code}" -X POST "https://reserve.sugomori-hokkaido.jp/api/ical/import" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
           
           http_code=$(echo "$response" | tail -n1)
