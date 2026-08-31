@@ -9,6 +9,7 @@ import { toggleBlockedDate } from "../blocked/actions";
 import { syncIcalFromAnywhere } from "../ical/actions";
 import { CustomerPicker } from "../reservations/CustomerPicker";
 import { DateField } from "../reservations/DateField";
+import { icalSourceIdFromReason } from "@/lib/ical-import";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +52,7 @@ export default async function CalendarPage({
   const rangeTo = ymd(new Date(year, month0, daysInMonth + 1)); // 翌月1日
 
   const supabase = createAdminClient();
-  const [{ count: roomCount }, { data: resData }, { data: blockedData }] =
+  const [{ count: roomCount }, { data: resData }, { data: blockedData }, { data: icalSourceData }] =
     await Promise.all([
       supabase.from("rooms").select("id", { count: "exact", head: true }).eq("is_active", true),
       supabase
@@ -66,11 +67,28 @@ export default async function CalendarPage({
         .select("start_date, end_date, room_type_id, reason")
         .lte("start_date", rangeTo)
         .gte("end_date", rangeFrom),
+      supabase.from("ical_sources").select("id, name"),
     ]);
 
   const totalRooms = roomCount ?? 0;
   const reservations = (resData ?? []) as ReservationWithRefs[];
   const blocked = blockedData ?? [];
+  const icalSourceNames = new Map(
+    ((icalSourceData ?? []) as { id: string; name: string }[]).map((s) => [s.id, s.name]),
+  );
+
+  // ブロック理由を「どこの連携で予約不可になったか」が分かる表示に変換する
+  function blockLabel(reason: string | null): string | null {
+    if (!reason) return null;
+    const sourceId = icalSourceIdFromReason(reason);
+    if (sourceId) {
+      const name = icalSourceNames.get(sourceId) ?? "外部カレンダー";
+      const summary = reason.replace(/^\[ical:[^\]]+\]\s*/, "");
+      return `${name}との同期でブロック${summary ? `（${summary}）` : ""}`;
+    }
+    if (reason === "gcal-sync") return "Googleカレンダー連携でブロック";
+    return reason;
+  }
 
   // 新規予約フォーム用マスタ（日付クリック時のみ取得）
   const showNewForm = !!newDate && /^\d{4}-\d{2}-\d{2}$/.test(newDate);
@@ -96,6 +114,7 @@ export default async function CalendarPage({
     avail: number;
     isBlocked: boolean;
     blockReason: string | null;
+    blockLabel: string | null;
   };
   const cells: (DayCell | null)[] = [];
   for (let i = 0; i < leadingBlanks; i++) cells.push(null);
@@ -115,6 +134,7 @@ export default async function CalendarPage({
       avail,
       isBlocked: globalBlocked,
       blockReason: globalBlock?.reason ?? null,
+      blockLabel: blockLabel(globalBlock?.reason ?? null),
     });
   }
   while (cells.length % 7 !== 0) cells.push(null);
@@ -252,11 +272,16 @@ export default async function CalendarPage({
                         ? "bg-red-50 text-red-600"
                         : "bg-gray-100 text-gray-600"
                   }`}
-                  title={cell.isBlocked ? (cell.blockReason ?? "休業") : undefined}
+                  title={cell.isBlocked ? (cell.blockLabel ?? "休業") : undefined}
                 >
                   {cell.isBlocked ? "休" : `空${cell.avail}`}
                 </span>
               </div>
+              {cell.isBlocked && cell.blockLabel && (
+                <p className="truncate text-[11px] text-gray-500" title={cell.blockLabel}>
+                  {cell.blockLabel}
+                </p>
+              )}
               {cell.resv.slice(0, 3).map((r) => (
                 // セルが狭いのでメールは title に入れる（ホバーで確認できる）
                 <Link key={r.id} href="/admin/reservations" title={[r.code, [r.customers?.last_name, r.customers?.first_name].filter(Boolean).join(" "), r.customers?.email].filter(Boolean).join(" / ")} className={`block truncate rounded px-1.5 py-1 text-xs transition ${isPast ? "bg-gray-100 text-gray-500 hover:bg-gray-200" : "bg-cyan-50 text-cyan-800 hover:bg-cyan-100"}`}>

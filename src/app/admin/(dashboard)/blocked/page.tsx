@@ -1,6 +1,7 @@
 import { SubmitButton } from "@/components/SubmitButton";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createBlocked, deleteBlocked } from "./actions";
+import { icalSourceIdFromReason } from "@/lib/ical-import";
 
 export const dynamic = "force-dynamic";
 
@@ -21,11 +22,17 @@ export default async function BlockedPage({
 }) {
   const { error } = await searchParams;
   const supabase = createAdminClient();
-  const { data } = await supabase
-    .from("blocked_dates")
-    .select("id, start_date, end_date, reason")
-    .order("start_date", { ascending: true });
+  const [{ data }, { data: icalSourceData }] = await Promise.all([
+    supabase
+      .from("blocked_dates")
+      .select("id, start_date, end_date, reason")
+      .order("start_date", { ascending: true }),
+    supabase.from("ical_sources").select("id, name"),
+  ]);
   const blocks = (data ?? []) as Blocked[];
+  const icalSourceNames = new Map(
+    ((icalSourceData ?? []) as { id: string; name: string }[]).map((s) => [s.id, s.name]),
+  );
 
   return (
     <div className="space-y-8">
@@ -67,11 +74,13 @@ export default async function BlockedPage({
         {blocks.length === 0 && <p className="text-sm text-gray-500">設定された予約不可日はありません。</p>}
         {blocks.map((b) => {
           // 連携由来の行は手で消しても次の取り込みで戻るので、解除させない
-          const icalSummary = b.reason?.match(/^\[ical:[^\]]+\]\s*(.*)$/)?.[1];
-          const isSync = b.reason === "gcal-sync" || icalSummary !== undefined;
+          const icalSourceId = icalSourceIdFromReason(b.reason);
+          const icalSummary = b.reason?.replace(/^\[ical:[^\]]+\]\s*/, "");
+          const isSync = b.reason === "gcal-sync" || icalSourceId !== null;
+          const sourceName = icalSourceId ? (icalSourceNames.get(icalSourceId) ?? "外部カレンダー") : null;
           const label =
-            icalSummary !== undefined
-              ? `iCal連携${icalSummary ? `: ${icalSummary}` : ""}`
+            icalSourceId !== null
+              ? `${sourceName}連携${icalSummary ? `: ${icalSummary}` : ""}`
               : b.reason === "gcal-sync"
                 ? "Googleカレンダー連携"
                 : b.reason;

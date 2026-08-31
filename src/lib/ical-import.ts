@@ -25,6 +25,12 @@ export function icalMarker(sourceId: string): string {
   return `[ical:${sourceId}]`;
 }
 
+/** blocked_dates.reason から連携元（ical_sources.id）を取り出す。マーカーが無ければ null。 */
+export function icalSourceIdFromReason(reason: string | null): string | null {
+  if (!reason) return null;
+  return reason.match(/^\[ical:([^\]]+)\]/)?.[1] ?? null;
+}
+
 function normalizeDate(value: string): string {
   const v = value.trim();
   // 20260801 / 20260801T150000 のどちらも先頭8桁が日付
