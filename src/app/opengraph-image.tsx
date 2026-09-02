@@ -60,9 +60,6 @@ export default async function Image() {
           <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 28 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={logoBase64} width={64} height={64} style={{ borderRadius: 999 }} />
-            <span style={{ fontSize: 26, color: "#e5e7eb", letterSpacing: 4 }}>
-              PRIVATE VILLA &amp; SAUNA
-            </span>
           </div>
           <div style={{ display: "flex", fontSize: 64, fontWeight: 700, color: "#ffffff" }}>
             {SITE.name}
