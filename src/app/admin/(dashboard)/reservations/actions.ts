@@ -20,7 +20,8 @@ import { generateReservationCode, canBook } from "@/lib/reservations";
 import { eachNight, OCCUPYING_STATUSES } from "@/lib/availability";
 import { auditLog } from "@/lib/audit";
 import { issueDoorPin, revokeDoorPin } from "@/lib/smart-lock";
-import { gcalCreateEvent, gcalDeleteEvent } from "@/lib/gcal";
+import { gcalCreateEvent, gcalCreateBlockEvent, gcalDeleteEvent } from "@/lib/gcal";
+import { icalSourceIdFromReason } from "@/lib/ical-import";
 import type { ReservationStatus, PaymentStatus } from "@/types/db";
 
 const PATH = "/admin/reservations";
@@ -530,6 +531,7 @@ export async function syncGcalFromReservations(formData: FormData) {
   const redirectTo = String(formData.get("redirect_to") ?? "/admin/calendar").trim() || "/admin/calendar";
   const supabase = createAdminClient();
 
+  // ── 1. 予約（reservations）の同期 ──────────────────────────────────
   // 記録として残すため、チェックアウト済みの過去分もカレンダーに反映する。
   // キャンセル・ノーショーは反映しない。
   const { data: rows } = await supabase
@@ -539,7 +541,7 @@ export async function syncGcalFromReservations(formData: FormData) {
     .is("archived_at", null)
     .is("gcal_event_id", null);
 
-  let synced = 0;
+  let resvSynced = 0;
   for (const r of rows ?? []) {
     const cust = r.customers as unknown as { last_name: string | null; first_name: string | null } | null;
     const customerName = [cust?.last_name, cust?.first_name].filter(Boolean).join(" ") || undefined;
@@ -553,22 +555,64 @@ export async function syncGcalFromReservations(formData: FormData) {
     }).catch(() => null);
     if (eventId) {
       await supabase.from("reservations").update({ gcal_event_id: eventId }).eq("id", r.id);
-      synced++;
+      resvSynced++;
     }
   }
 
+  // ── 2. ブロック日程（blocked_dates）の同期 ──────────────────────────
+  // iCal由来 → "[Airbnb] 予約不可"  /  手動設定 → "予約不可: {reason}"
+  const { data: blockedRows } = await supabase
+    .from("blocked_dates")
+    .select("id, start_date, end_date, reason")
+    .is("gcal_event_id", null);
+
+  // iCalソース名を一括取得しておく
+  const { data: icalSources } = await supabase.from("ical_sources").select("id, name");
+  const sourceNameMap = new Map(
+    ((icalSources ?? []) as { id: string; name: string }[]).map((s) => [s.id, s.name]),
+  );
+
+  let blockSynced = 0;
+  for (const b of blockedRows ?? []) {
+    const reason = b.reason as string | null;
+    const sourceId = reason ? icalSourceIdFromReason(reason) : null;
+    const sourceName = sourceId ? (sourceNameMap.get(sourceId) ?? null) : null;
+
+    const eventId = await gcalCreateBlockEvent({
+      sourceName,
+      reason,
+      start_date: b.start_date as string,
+      end_date: b.end_date as string,
+    }).catch(() => null);
+
+    if (eventId) {
+      await supabase.from("blocked_dates").update({ gcal_event_id: eventId }).eq("id", b.id);
+      blockSynced++;
+    }
+  }
+
+  // ── 3. リダイレクト ─────────────────────────────────────────────────
   revalidatePath(PATH);
   revalidatePath("/admin/calendar");
 
   const [path, query] = redirectTo.split("?");
   const sp = new URLSearchParams(query ?? "");
-  const total = rows?.length ?? 0;
+  const resvTotal = rows?.length ?? 0;
+  const blockTotal = blockedRows?.length ?? 0;
+  const total = resvTotal + blockTotal;
+
   if (total === 0) {
-    sp.set("done", "Googleカレンダー同期: 未反映の予約はありませんでした");
-  } else if (synced < total) {
-    sp.set("error", `Googleカレンダー同期: ${synced}/${total}件のみ反映できました（連携設定をご確認ください）`);
+    sp.set("done", "Googleカレンダー同期: 未反映の予約・ブロックはありませんでした");
+  } else if (resvSynced + blockSynced < total) {
+    sp.set(
+      "error",
+      `Googleカレンダー同期: 予約${resvSynced}/${resvTotal}件・ブロック${blockSynced}/${blockTotal}件のみ反映できました（連携設定をご確認ください）`,
+    );
   } else {
-    sp.set("done", `Googleカレンダー同期: ${synced}件の予約を反映しました`);
+    const parts: string[] = [];
+    if (resvTotal > 0) parts.push(`予約${resvSynced}件`);
+    if (blockTotal > 0) parts.push(`ブロック${blockSynced}件`);
+    sp.set("done", `Googleカレンダー同期: ${parts.join("・")}を反映しました`);
   }
   redirect(`${path}?${sp.toString()}`);
 }

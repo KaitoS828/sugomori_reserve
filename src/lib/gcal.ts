@@ -83,3 +83,51 @@ export async function gcalDeleteEvent(eventId: string): Promise<void> {
     console.error("Googleカレンダーの削除に失敗:", e);
   }
 }
+
+type BlockPayload = {
+  /** iCalソース名（例: "Airbnb"）。nullなら手動設定扱い */
+  sourceName: string | null;
+  /** ブロック理由（手動設定時に使用） */
+  reason: string | null;
+  start_date: string;
+  end_date: string;
+};
+
+/**
+ * ブロック日程をGoogleカレンダーに登録する。
+ * - iCal由来（sourceName あり）: "[Airbnb] 予約不可"
+ * - 手動設定（sourceName なし）: "予約不可" または "予約不可: {reason}"
+ */
+export async function gcalCreateBlockEvent(p: BlockPayload): Promise<string | null> {
+  const calendar = getCalendar();
+  if (!calendar) return null;
+
+  // 終日イベントの end.date は排他的なので1日後にする
+  const end = p.end_date > p.start_date ? nextDay(p.end_date) : nextDay(p.start_date);
+
+  const summary = p.sourceName
+    ? `[${p.sourceName}] 予約不可`
+    : p.reason
+      ? `予約不可: ${p.reason}`
+      : "予約不可";
+
+  const description = p.sourceName
+    ? `${p.sourceName}経由の予約によりブロック`
+    : "管理画面で手動設定された予約不可日程";
+
+  try {
+    const event = await calendar.events.insert({
+      calendarId: CALENDAR_ID,
+      requestBody: {
+        summary,
+        description,
+        start: { date: p.start_date },
+        end: { date: end },
+      },
+    });
+    return event.data.id ?? null;
+  } catch (e) {
+    console.error("Googleカレンダーへのブロック登録に失敗:", e);
+    return null;
+  }
+}
