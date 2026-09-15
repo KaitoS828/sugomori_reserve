@@ -36,8 +36,12 @@ export async function sendEmail({ to, subject, html }: SendArgs): Promise<boolea
             ...(replyTo ? { reply_to: replyTo } : {}),
           }),
         });
+        if (!res.ok) {
+          console.error(`Resend送信失敗 (${res.status} ${res.statusText}) 宛先=${addr} from=${from}:`, await res.text());
+        }
         return res.ok;
-      } catch {
+      } catch (e) {
+        console.error(`Resend送信エラー 宛先=${addr} from=${from}:`, e);
         return false;
       }
     }),
