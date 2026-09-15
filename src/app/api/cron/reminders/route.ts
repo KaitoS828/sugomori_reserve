@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { authorizeCron } from "@/lib/cron-auth";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, ownerEmails, ownerEmailCopySubject, ownerEmailCopyHtml } from "@/lib/email";
 import { ensureSecretCode, registerUrl } from "@/lib/guest-registration";
 import { originFromHeaders } from "@/lib/booking-guide-server";
 import { reminderHtml, reminderSubject, tomorrowJst } from "@/lib/reminder";
@@ -80,25 +80,32 @@ async function handle(req: NextRequest) {
       ? `${origin}/reserve/lookup?code=${encodeURIComponent(r.code)}&email=${encodeURIComponent(to)}`
       : null;
 
-    const ok = await sendEmail({
-      to,
-      subject,
-      html: reminderHtml({
-        guestName,
-        code: r.code,
-        checkIn: r.check_in,
-        checkOut: r.check_out,
-        // 到着時刻の申告があればそれを、無ければ施設の開始時刻
-        checkInTime: (r.check_in_time ?? facility?.check_in_time ?? "15:00").slice(0, 5),
-        numGuests: r.num_guests,
-        registeredGuests: count ?? 0,
-        doorPin: r.access_keys?.status === "issued" ? r.access_keys.door_pin : null,
-        registerUrl: registerUrl(origin, secret),
-        lookupUrl,
-        phone: (facility?.phone as string | null) ?? null,
-      }),
-    }).catch(() => false);
+    const html = reminderHtml({
+      guestName,
+      code: r.code,
+      checkIn: r.check_in,
+      checkOut: r.check_out,
+      // 到着時刻の申告があればそれを、無ければ施設の開始時刻
+      checkInTime: (r.check_in_time ?? facility?.check_in_time ?? "15:00").slice(0, 5),
+      numGuests: r.num_guests,
+      registeredGuests: count ?? 0,
+      doorPin: r.access_keys?.status === "issued" ? r.access_keys.door_pin : null,
+      registerUrl: registerUrl(origin, secret),
+      lookupUrl,
+      phone: (facility?.phone as string | null) ?? null,
+    });
+    const ok = await sendEmail({ to, subject, html }).catch(() => false);
     if (!ok) await notifyFailure("前日リマインドの送信", "送信に失敗", { 予約: r.code, 宛先: to });
+
+    // オーナーにも送信控えを転送する
+    const owners = ownerEmails();
+    if (ok && owners.length) {
+      await sendEmail({
+        to: owners,
+        subject: ownerEmailCopySubject(subject),
+        html: ownerEmailCopyHtml({ to, html }),
+      }).catch(() => {});
+    }
 
     await supabase.from("guest_message_deliveries").insert({
       reservation_id: r.id,

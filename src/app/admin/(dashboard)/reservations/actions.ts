@@ -499,6 +499,16 @@ export async function sendReviewRequestEmail(formData: FormData) {
 
   const ok = await sendEmail({ to, subject, html });
 
+  // オーナーにも送信控えを転送する
+  const reviewOwners = ownerEmails();
+  if (ok && reviewOwners.length) {
+    await sendEmail({
+      to: reviewOwners,
+      subject: ownerEmailCopySubject(subject),
+      html: ownerEmailCopyHtml({ to, html }),
+    }).catch(() => {});
+  }
+
   await supabase.from("guest_message_deliveries").insert({
     reservation_id: id,
     message_type: "review_request",
