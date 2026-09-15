@@ -32,7 +32,7 @@ import { ConfirmButton } from "@/components/ConfirmButton";
 import { GuestRegistry, type RegistryGuest } from "./GuestRegistry";
 import { bookingGuideSubject, bookingGuideText } from "@/lib/booking-guide";
 import { reviewRequestSubject, reviewRequestText } from "@/lib/review-request";
-import { ensureSecretCode, registerUrl } from "@/lib/guest-registration";
+import { ensureSecretCodes, registerUrl } from "@/lib/guest-registration";
 import {
   guideInput,
   originFromHeaders,
@@ -200,7 +200,8 @@ export default async function ReservationsPage({
   };
 
   const ids = reservations.map((r) => r.id);
-  const [{ data: deliveries }, { data: registered }] = await Promise.all([
+  const activeIds = reservations.filter((r) => r.status !== "cancelled").map((r) => r.id);
+  const [{ data: deliveries }, { data: registered }, secretCodes] = await Promise.all([
     ids.length
       ? supabase
           .from("guest_message_deliveries")
@@ -218,6 +219,8 @@ export default async function ReservationsPage({
           .in("reservation_id", ids)
           .order("guest_order")
       : Promise.resolve({ data: [] }),
+    // 予約ごとに直列/並列でDBへ問い合わせず、まとめて1〜2回で取得する（N+1回避）
+    ensureSecretCodes(supabase, activeIds),
   ]);
 
   // 送信済みかどうかが分からないと二重送信するので、最後に送れた日時を持つ
@@ -247,34 +250,32 @@ export default async function ReservationsPage({
   const origin = originFromHeaders(h);
   const guides = new Map<string, { subject: string; body: string }>();
   const reviewRequests = new Map<string, { subject: string; body: string }>();
-  await Promise.all(
-    reservations
-      .filter((r) => r.status !== "cancelled")
-      .map(async (r) => {
-        const secret = await ensureSecretCode(supabase, r.id);
-        const guestName = custName(r.customers);
-        const guestEmail = r.customers?.email?.trim();
-        const lookupUrl = guestEmail
-          ? `${origin}/reserve/lookup?code=${encodeURIComponent(r.code)}&email=${encodeURIComponent(guestEmail)}`
-          : null;
-        guides.set(r.id, {
-          subject: bookingGuideSubject(guestName),
-          body: bookingGuideText(
-            guideInput(r as unknown as GuideRow, facility as GuideFacility, registerUrl(origin, secret), lookupUrl),
-          ),
-        });
-        reviewRequests.set(r.id, {
-          subject: reviewRequestSubject(guestName),
-          body: reviewRequestText({
-            guestName,
-            code: r.code,
-            checkIn: r.check_in,
-            checkOut: r.check_out,
-            phone: (facility?.phone as string | null) ?? null,
-          }),
-        });
-      }),
-  );
+  reservations
+    .filter((r) => r.status !== "cancelled")
+    .forEach((r) => {
+      const secret = secretCodes.get(r.id) ?? null;
+      const guestName = custName(r.customers);
+      const guestEmail = r.customers?.email?.trim();
+      const lookupUrl = guestEmail
+        ? `${origin}/reserve/lookup?code=${encodeURIComponent(r.code)}&email=${encodeURIComponent(guestEmail)}`
+        : null;
+      guides.set(r.id, {
+        subject: bookingGuideSubject(guestName),
+        body: bookingGuideText(
+          guideInput(r as unknown as GuideRow, facility as GuideFacility, registerUrl(origin, secret), lookupUrl),
+        ),
+      });
+      reviewRequests.set(r.id, {
+        subject: reviewRequestSubject(guestName),
+        body: reviewRequestText({
+          guestName,
+          code: r.code,
+          checkIn: r.check_in,
+          checkOut: r.check_out,
+          phone: (facility?.phone as string | null) ?? null,
+        }),
+      });
+    });
   const roomTypes = (types ?? []) as RoomType[];
   const roomList = (rooms ?? []) as Room[];
   const planList = (plans ?? []) as Plan[];
