@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { sendEmail, ownerEmails, ownerEmailCopySubject, ownerEmailCopyHtml } from "@/lib/email";
+import { sendEmail, ownerEmails, ownerEmailCopySubject, ownerEmailCopyHtml, customMessageHtml } from "@/lib/email";
 import { bookingGuideHtml, bookingGuideSubject } from "@/lib/booking-guide";
 import { reviewRequestHtml, reviewRequestSubject, reviewRequestCustomHtml } from "@/lib/review-request";
 import {
@@ -520,6 +520,67 @@ export async function sendReviewRequestEmail(formData: FormData) {
   if (!ok) redirectError("メールの送信に失敗しました。設定をご確認ください");
   revalidatePath(PATH);
   redirect(`${PATH}?done=${encodeURIComponent(`${to} へレビュー依頼メールを送信しました`)}`);
+}
+
+// テンプレートに縛られず、予約の客へ自由文メールを送る（Airbnb客への個別連絡など）。
+export async function sendCustomMessage(formData: FormData) {
+  const id = String(formData.get("id"));
+  const supabase = createAdminClient();
+
+  const { data: resv } = await supabase
+    .from("reservations")
+    .select("id, code, customers(email)")
+    .eq("id", id)
+    .maybeSingle();
+  if (!resv) redirectError("予約が見つかりません");
+
+  const row = resv as unknown as {
+    id: string;
+    code: string;
+    customers: { email: string | null } | null;
+  };
+
+  const to = row.customers?.email?.trim();
+  if (!to) redirectError("この予約にはメールアドレスが登録されていません");
+
+  const subject = String(formData.get("subject") ?? "").trim();
+  const body = String(formData.get("body") ?? "").trim();
+  if (!subject || !body) redirectError("件名と本文を入力してください");
+
+  const html = customMessageHtml(body);
+  const ok = await sendEmail({ to, subject, html });
+
+  // オーナーにも送信控えを転送する
+  const owners = ownerEmails();
+  if (ok && owners.length) {
+    await sendEmail({
+      to: owners,
+      subject: ownerEmailCopySubject(subject),
+      html: ownerEmailCopyHtml({ to, html }),
+    }).catch(() => {});
+  }
+
+  await supabase.from("guest_message_deliveries").insert({
+    reservation_id: id,
+    message_type: "custom",
+    channel: "email",
+    sent_to: to,
+    subject,
+    status: ok ? "sent" : "failed",
+    error: ok ? null : "送信に失敗しました",
+    sent_at: new Date().toISOString(),
+  });
+
+  await auditLog(supabase, {
+    action: "custom_message_send",
+    entityType: "reservation",
+    entityId: id,
+    summary: `${row.code} へ自由文メール（${subject}）を ${to} へ${ok ? "送信" : "送信失敗"}`,
+  }).catch(() => {});
+
+  if (!ok) redirectError("メールの送信に失敗しました。設定をご確認ください");
+  revalidatePath(PATH);
+  redirect(`${PATH}?done=${encodeURIComponent(`${to} へメールを送信しました`)}`);
 }
 
 export async function unarchiveReservation(formData: FormData) {

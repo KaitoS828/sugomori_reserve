@@ -146,6 +146,14 @@ export function ownerEmailCopyHtml(p: { to: string; html: string }): string {
     ${p.html}`;
 }
 
+// 予約に紐づく客への自由文メール（テンプレートに縛られない連絡用）
+export function customMessageHtml(body: string): string {
+  const escaped = esc(body.trim())
+    .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" style="color:#0f766e">$1</a>')
+    .replace(/\n/g, "<br>");
+  return wrap(`<div>${escaped}</div>`);
+}
+
 export function cancellationHtml(p: {
   name: string; code: string; refund: number; locale?: Locale;
 }): string {

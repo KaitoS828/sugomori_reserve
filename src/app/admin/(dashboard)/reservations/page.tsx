@@ -19,6 +19,7 @@ import {
   issueDoorPinManually,
   revokeDoorPinManually,
   sendBookingGuideEmail,
+  sendCustomMessage,
   sendReviewRequestEmail,
 } from "./actions";
 import { CustomerPicker } from "./CustomerPicker";
@@ -26,6 +27,7 @@ import { DateField } from "./DateField";
 import { EditToggle } from "./EditToggle";
 import { BookingGuide } from "./BookingGuide";
 import { ReviewRequestGuide } from "./ReviewRequestGuide";
+import { CustomMessage } from "./CustomMessage";
 import { ConfirmButton } from "@/components/ConfirmButton";
 import { GuestRegistry, type RegistryGuest } from "./GuestRegistry";
 import { bookingGuideSubject, bookingGuideText } from "@/lib/booking-guide";
@@ -221,12 +223,15 @@ export default async function ReservationsPage({
   // 送信済みかどうかが分からないと二重送信するので、最後に送れた日時を持つ
   const lastSent = new Map<string, string>();
   const lastSentReview = new Map<string, string>();
+  const lastSentCustom = new Map<string, string>();
   for (const d of (deliveries ?? []) as { reservation_id: string; message_type: string; sent_at: string; status: string }[]) {
     if (d.status === "sent") {
       if (d.message_type === "booking_guide" && !lastSent.has(d.reservation_id)) {
         lastSent.set(d.reservation_id, jstDateTime(d.sent_at));
       } else if (d.message_type === "review_request" && !lastSentReview.has(d.reservation_id)) {
         lastSentReview.set(d.reservation_id, jstDateTime(d.sent_at));
+      } else if (d.message_type === "custom" && !lastSentCustom.has(d.reservation_id)) {
+        lastSentCustom.set(d.reservation_id, jstDateTime(d.sent_at));
       }
     }
   }
@@ -248,10 +253,14 @@ export default async function ReservationsPage({
       .map(async (r) => {
         const secret = await ensureSecretCode(supabase, r.id);
         const guestName = custName(r.customers);
+        const guestEmail = r.customers?.email?.trim();
+        const lookupUrl = guestEmail
+          ? `${origin}/reserve/lookup?code=${encodeURIComponent(r.code)}&email=${encodeURIComponent(guestEmail)}`
+          : null;
         guides.set(r.id, {
           subject: bookingGuideSubject(guestName),
           body: bookingGuideText(
-            guideInput(r as unknown as GuideRow, facility as GuideFacility, registerUrl(origin, secret)),
+            guideInput(r as unknown as GuideRow, facility as GuideFacility, registerUrl(origin, secret), lookupUrl),
           ),
         });
         reviewRequests.set(r.id, {
@@ -483,6 +492,7 @@ export default async function ReservationsPage({
                 lastSentAt={lastSent.get(r.id) ?? null}
                 reviewRequest={reviewRequests.get(r.id) ?? null}
                 lastSentReviewAt={lastSentReview.get(r.id) ?? null}
+                lastSentCustomAt={lastSentCustom.get(r.id) ?? null}
                 registry={registry.get(r.id) ?? []}
               />
             </div>
@@ -503,6 +513,7 @@ function ReservationCard({
   lastSentAt,
   reviewRequest,
   lastSentReviewAt,
+  lastSentCustomAt,
   registry,
 }: {
   r: ReservationWithRefs;
@@ -514,6 +525,7 @@ function ReservationCard({
   lastSentAt: string | null;
   reviewRequest: { subject: string; body: string } | null;
   lastSentReviewAt: string | null;
+  lastSentCustomAt: string | null;
   registry: RegistryGuest[];
 }) {
   const meta = statusMeta(r.status);
@@ -690,6 +702,13 @@ function ReservationCard({
                     reservationId={r.id}
                   />
                 )}
+
+                <CustomMessage
+                  email={r.customers?.email ?? null}
+                  lastSentAt={lastSentCustomAt}
+                  sendAction={sendCustomMessage}
+                  reservationId={r.id}
+                />
 
                 <EditToggle
                   actions={
