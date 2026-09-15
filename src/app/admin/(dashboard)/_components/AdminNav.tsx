@@ -39,6 +39,10 @@ export function AdminNav({ groups }: { groups: NavGroup[] }) {
             <Link
               key={item.href}
               href={item.href}
+              // サイドバーの全項目が常に画面内にあるため、既定のprefetchだと
+              // ページを開くたびに全メニュー分（認証チェック込み）が裏で走ってしまう。
+              // 動的なDB取得ページばかりなので恩恵が薄く、負荷だけが増える。
+              prefetch={false}
               className={`block rounded-lg px-3 py-2.5 text-sm transition md:py-2 ${
                 isActive(item.href)
                   ? "bg-cyan-50 font-medium text-cyan-800"
