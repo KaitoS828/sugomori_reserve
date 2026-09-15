@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, ownerEmails, ownerEmailCopySubject, ownerEmailCopyHtml } from "@/lib/email";
 import { bookingGuideHtml, bookingGuideSubject } from "@/lib/booking-guide";
 import { reviewRequestHtml, reviewRequestSubject, reviewRequestCustomHtml } from "@/lib/review-request";
 import {
@@ -414,7 +414,18 @@ export async function sendBookingGuideEmail(formData: FormData) {
   const input = guideInput(row, facility as GuideFacility, registerUrl(origin, secret), lookupUrl);
   const subject = bookingGuideSubject(guestFullName(row.customers));
 
-  const ok = await sendEmail({ to, subject, html: bookingGuideHtml(input) });
+  const html = bookingGuideHtml(input);
+  const ok = await sendEmail({ to, subject, html });
+
+  // オーナーにも送信控えを転送する
+  const owners = ownerEmails();
+  if (ok && owners.length) {
+    await sendEmail({
+      to: owners,
+      subject: ownerEmailCopySubject(subject),
+      html: ownerEmailCopyHtml({ to, html }),
+    }).catch(() => {});
+  }
 
   // 送ったかどうかが分からないと二重送信するので、成否どちらも残す
   await supabase.from("guest_message_deliveries").insert({

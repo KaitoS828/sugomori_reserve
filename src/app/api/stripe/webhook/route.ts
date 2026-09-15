@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendEmail, ownerBookingHtml, ownerEmails } from "@/lib/email";
+import { sendEmail, ownerBookingHtml, ownerEmails, ownerEmailCopySubject, ownerEmailCopyHtml } from "@/lib/email";
 import { bookingGuideHtml, bookingGuideSubject } from "@/lib/booking-guide";
 import { GUIDE_SELECT, guideInput, type GuideFacility, type GuideRow } from "@/lib/booking-guide-server";
 import { ensureSecretCode, registerUrl } from "@/lib/guest-registration";
@@ -137,6 +137,16 @@ export async function POST(req: NextRequest) {
           );
           const ok = await sendEmail({ to: cust.email, subject, html }).catch(() => false);
           if (!ok) await notifyFailure("予約時メールの自動送信", "送信に失敗", { 予約: info.code, 宛先: cust.email });
+
+          // オーナーにも送信控えを転送する
+          const guideOwners = ownerEmails();
+          if (ok && guideOwners.length) {
+            await sendEmail({
+              to: guideOwners,
+              subject: ownerEmailCopySubject(subject),
+              html: ownerEmailCopyHtml({ to: cust.email, html }),
+            }).catch(() => {});
+          }
 
           // 管理画面の送信履歴と同じ場所に残す。送れたかどうかを後から確認できる。
           await supabase.from("guest_message_deliveries").insert({

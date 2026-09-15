@@ -133,6 +133,19 @@ export function ownerCancellationHtml(p: {
     </table>`);
 }
 
+// オーナー宛（ゲストへの案内メール送信控え）。本文をそのまま転記する。
+export function ownerEmailCopySubject(subject: string): string {
+  return `[送信完了] ${subject}`;
+}
+
+export function ownerEmailCopyHtml(p: { to: string; html: string }): string {
+  return `
+    <div style="font-family:sans-serif;max-width:560px;margin:0 auto 12px;color:#0f766e;font-size:13px;background:#f0fdfa;border:1px solid #99f6e4;border-radius:8px;padding:10px 14px">
+      📧 ${esc(p.to)} 宛にメールを送信しました
+    </div>
+    ${p.html}`;
+}
+
 export function cancellationHtml(p: {
   name: string; code: string; refund: number; locale?: Locale;
 }): string {
