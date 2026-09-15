@@ -19,7 +19,7 @@ export const SITE = {
   phone: "080-5830-4957",
   checkIn: "15:00",
   checkOut: "10:00",
-  maxGuests: 2,
+  maxGuests: 4,
 } as const;
 
 export function siteUrl(): string {
