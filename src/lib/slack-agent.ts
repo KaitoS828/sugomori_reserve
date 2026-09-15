@@ -206,7 +206,10 @@ export const toolImpls: Record<string, (input: Record<string, unknown>) => Promi
     if (!pp) return `プラン「${planData.name}」に料金が設定されていません。`;
     const roomTypeId = pp.room_type_id;
 
-    const ok = await canBook(roomTypeId, check_in, check_out);
+    // 管理画面（電話・対面・Airbnb等の外部チャネル）からの手動登録は、
+    // iCal取込等のカレンダーブロックを無視し、実際の予約との重複だけを見る。
+    // 管理画面フォームの手動予約登録と同じ扱い。
+    const ok = await canBook(roomTypeId, check_in, check_out, { ignoreBlocked: true });
     if (!ok) return `${check_in}〜${check_out} は満室のため予約できません。`;
 
     const nightly = nightlyRateForGuests(num_guests, pp.guest_prices, pp.price_per_night);
