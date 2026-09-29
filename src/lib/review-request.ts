@@ -149,23 +149,8 @@ ${reviewUrl}`,
 /** 編集されたプレーンテキスト本文をHTMLメール用にフォーマットする */
 export function reviewRequestCustomHtml(customBody: string): string {
   const body = escapeHtml(customBody.trim())
-    .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" style="color:#0f766e;text-decoration:underline">$1</a>')
+    .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1">$1</a>')
     .replace(/\n/g, "<br>");
 
-  return `
-  <div style="font-family:-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:14px;line-height:1.9;color:#1f2937;max-width:560px;margin:0 auto">
-    <div style="border-bottom:2px solid #0d9488;padding:16px 0">
-      <strong style="font-size:18px;color:#0f766e">一棟貸し宿「SUGOMORI」</strong>
-    </div>
-
-    <div style="padding:24px 0">
-      ${body}
-    </div>
-
-    <div style="border-top:1px solid #e5e7eb;padding:16px 0;color:#6b7280;font-size:12px;line-height:1.6">
-      <strong style="color:#374151">一棟貸し宿「SUGOMORI」</strong><br>
-      住所: 北海道広尾郡大樹町下大樹<br>
-      電話: ${SITE.phone}
-    </div>
-  </div>`;
+  return `<div style="font-family:-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:14px;line-height:1.9;color:#111827">${body}</div>`;
 }

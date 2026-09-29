@@ -110,6 +110,7 @@ export function bookingConfirmedHtml(p: {
 // オーナー宛（新規予約）
 export function ownerBookingHtml(p: {
   name: string; code: string; plan: string; checkIn: string; checkOut: string; nights: number; guests: number; amount: number; email?: string; phone?: string;
+  survey?: string | null; note?: string | null;
 }): string {
   return wrap(`
     <p><strong>🆕 新規予約が入りました</strong></p>
@@ -120,6 +121,8 @@ export function ownerBookingHtml(p: {
       ${row("プラン", esc(p.plan))}
       ${row("日程", `${esc(p.checkIn)} 〜 ${esc(p.checkOut)}（${p.nights}泊）`)}
       ${row("金額", `¥${p.amount.toLocaleString()}`)}
+      ${p.survey ? row("ご要望・アンケート", esc(p.survey).replace(/\n/g, "<br>")) : ""}
+      ${p.note ? row("連絡事項", esc(p.note).replace(/\n/g, "<br>")) : ""}
     </table>`);
 }
 
@@ -153,9 +156,9 @@ export function ownerEmailCopyHtml(p: { to: string; html: string }): string {
 // 予約に紐づく客への自由文メール（テンプレートに縛られない連絡用）
 export function customMessageHtml(body: string): string {
   const escaped = esc(body.trim())
-    .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" style="color:#0f766e">$1</a>')
+    .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1">$1</a>')
     .replace(/\n/g, "<br>");
-  return wrap(`<div>${escaped}</div>`);
+  return `<div style="font-family:-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;font-size:14px;line-height:1.9;color:#111827">${escaped}</div>`;
 }
 
 export function cancellationHtml(p: {
