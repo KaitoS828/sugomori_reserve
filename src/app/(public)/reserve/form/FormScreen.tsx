@@ -47,6 +47,10 @@ export async function FormScreen({
     .single();
   if (!plan) notFound();
 
+  const { data: facility } = await supabase.from("facility").select("check_in_time").limit(1).maybeSingle();
+  const minHour = Number(((facility?.check_in_time as string | null) ?? "15:00").slice(0, 2));
+  const arrivalHours = HOURS.filter((h) => Number(h) >= minHour);
+
   // ログイン済みの会員には会員登録欄を出さない
   const { data: { user } } = await (await createClient()).auth.getUser();
 
@@ -179,8 +183,8 @@ export async function FormScreen({
           <div className="grid gap-2 md:grid-cols-[160px_1fr] md:items-center">
             <span className={label}>{t.checkInTime} {req}</span>
             <div className="flex items-center gap-2">
-              <select name="ci_hour" required defaultValue="15" className={`${field} w-24`}>
-                {HOURS.map((h) => <option key={h} value={h}>{h}</option>)}
+              <select name="ci_hour" required defaultValue={String(minHour).padStart(2, "0")} className={`${field} w-24`}>
+                {arrivalHours.map((h) => <option key={h} value={h}>{h}</option>)}
               </select>
               <span>:</span>
               <select name="ci_min" required defaultValue="00" className={`${field} w-24`}>

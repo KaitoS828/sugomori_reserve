@@ -90,6 +90,13 @@ export async function startCheckout(formData: FormData) {
   const supabase = createAdminClient();
   const { data: { user } } = await (await createClient()).auth.getUser();
 
+  // 到着予定はチェックイン時刻以降のみ（画面の選択肢を迂回した直接送信も弾く）
+  if (ciHour && ciMin) {
+    const { data: facility } = await supabase.from("facility").select("check_in_time").limit(1).maybeSingle();
+    const [h, m] = ((facility?.check_in_time as string | null) ?? "15:00").split(":").map(Number);
+    if (!(Number(ciHour) * 60 + Number(ciMin) >= h * 60 + m)) fail(locale, planId, "arrival_too_early");
+  }
+
   // パスワードは任意。入力された場合だけ会員アカウントを自動作成する。
   const wantsAccount = !user && password.length > 0;
   if (wantsAccount) {
