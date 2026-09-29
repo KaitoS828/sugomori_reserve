@@ -328,7 +328,7 @@ export async function issueDoorPinManually(formData: FormData) {
 
   const { data: resv } = await supabase
     .from("reservations")
-    .select("id, code, check_in, check_out, status, customers(last_name, first_name)")
+    .select("id, code, check_in, check_out, check_in_time, status, customers(last_name, first_name)")
     .eq("id", id)
     .maybeSingle();
   if (!resv) redirectError("予約が見つかりません");
@@ -350,7 +350,8 @@ export async function issueDoorPinManually(formData: FormData) {
     guestName: [cust?.last_name, cust?.first_name].filter(Boolean).join(" ") || null,
     checkIn: resv.check_in as string,
     checkOut: resv.check_out as string,
-    checkInTime: (facility?.check_in_time as string | null)?.slice(0, 5),
+    // 案内メールの「このコードは○時から」と合わせるため、予約に入っている到着時刻を優先する
+    checkInTime: ((resv.check_in_time as string | null) ?? (facility?.check_in_time as string | null))?.slice(0, 5),
     checkOutTime: (facility?.check_out_time as string | null)?.slice(0, 5),
   });
   if (!result.ok) redirectError(`ドアPINの発行に失敗しました: ${result.reason}`);
