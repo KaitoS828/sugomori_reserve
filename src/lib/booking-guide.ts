@@ -4,12 +4,24 @@
 
 // 館内の案内。変更はここだけ直せば全文に反映される。
 // Wi-Fiは未設定のあいだ案内文から丸ごと省く（誤った接続情報を送らないため）。
-export const WIFI_SSID = "";
-export const WIFI_PASSWORD = "";
+export const WIFI_SSID = "sugomori-wifi";
+export const WIFI_PASSWORD = "sugomori-hokkaido";
+export const BIO_TOILET_GUIDE_URL = "https://drive.google.com/file/d/1KEaL_tTMpYQvRLeCXy4Qnp-QM5-HVzia/view?usp=sharing";
+export const EQUIPMENT_NOTES = [
+  "屋外の電気がありませんので、外に出る際はお気を付けください。",
+  "冷蔵庫は、ご使用時にコンセントを挿してお使いください。",
+  "お湯をご利用の際は、浴室前の給湯器のスイッチを入れてからお使いください。",
+  "浴室前にカゴをご用意しておりますので、使用済みタオル等はこちらにお入れください。",
+  "ウッドデッキ下のキャンプチェアなどは、ご自由にお使いいただけます。",
+  "室内のタブレットはご自由にご利用可能ですが、屋外への持ち出しは厳禁とさせていただきます。",
+];
 export const HOUSE_NOTES = [
+  "ウッドデッキから落ちないようにお使いください。",
   "夜間はお静かにお過ごしください。",
-  "館内は禁煙です。喫煙は屋外の灰皿をご利用ください。",
+  "館内は禁煙です。喫煙はウッドデッキよりも外でお願いいたします。灰皿はご自身でお持ちくださいませ。",
+  "花火はウッドデッキの外でお願いいたします。",
   "ゴミは分別のうえ、所定の場所にお願いいたします。",
+  "次のお客様のためにも、綺麗にお使いいただけますと嬉しいです。ご協力をよろしくお願いいたします。",
 ];
 
 export type BookingGuideInput = {
@@ -117,11 +129,23 @@ ${jpDate(input.checkOut)} ${input.checkOutTime} まで有効です。
     );
   }
 
+  blocks.push(`■ 設備や備品のご利用について\n${EQUIPMENT_NOTES.map((n) => `・${n}`).join("\n")}`);
+
+  blocks.push(
+    `■ バイオトイレの使い方
+当施設では、環境保全への取り組みでバイオトイレを使用しています。
+トイレットペーパー以外（ティッシュペーパー、生理用品、おむつ、ウェットティッシュ等）は
+絶対に流さないでください。詰まり・故障の原因となります。
+写真つきの使い方は下記をご覧ください。
+
+${BIO_TOILET_GUIDE_URL}`,
+  );
+
   blocks.push(`■ お願い\n${HOUSE_NOTES.map((n) => `・${n}`).join("\n")}`);
 
   blocks.push(
     `■ お問い合わせ
-ご不明な点やご到着が遅れる場合は、下記までご連絡ください。
+ご不明な点や、ご到着が遅れる場合は、お気軽にご連絡ください！
 ${input.phone ? `電話: ${input.phone}` : ""}
 
 当日お会いできますことを楽しみにしております。

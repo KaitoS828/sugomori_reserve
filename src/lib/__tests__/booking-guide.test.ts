@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { bookingGuideSubject, bookingGuideText, type BookingGuideInput } from "../booking-guide";
+import { bookingGuideSubject, bookingGuideText, type BookingGuideInput, WIFI_PASSWORD, WIFI_SSID } from "../booking-guide";
 
 const base: BookingGuideInput = {
   guestName: "さー やん",
@@ -41,9 +41,11 @@ describe("bookingGuideText", () => {
     assert.ok(text.includes("キーパッド"), "当日の鍵の開け方");
   });
 
-  it("Wi-Fi が未設定なら接続情報の項目ごと省く", () => {
+  it("Wi-Fi の接続情報を載せる", () => {
     const text = bookingGuideText(base);
-    assert.ok(!text.includes("■ Wi-Fi"));
+    assert.ok(text.includes("■ Wi-Fi"));
+    assert.ok(text.includes(`ネットワーク名（SSID）: ${WIFI_SSID}`));
+    assert.ok(text.includes(`パスワード: ${WIFI_PASSWORD}`));
   });
 
   it("チェックイン・チェックアウト時刻を項目として載せる", () => {
@@ -90,9 +92,20 @@ describe("bookingGuideText", () => {
   it("フォームURLが無ければURLを載せず、別途案内すると伝える", () => {
     const text = bookingGuideText({ ...base, registerUrl: null, lookupUrl: null });
     assert.ok(text.includes("別途ご案内"));
-    assert.ok(!text.includes("https://"));
+    assert.ok(!text.includes("/register/"));
+    assert.ok(!text.includes("/reserve/lookup"));
     // 名簿のお願い自体は消さない（法令要件なので）
     assert.ok(text.includes("宿泊者名簿"));
+  });
+
+  it("設備の案内・バイオトイレの資料リンク・お願いを載せる", () => {
+    const text = bookingGuideText(base);
+    assert.ok(text.includes("■ 設備や備品のご利用について"));
+    assert.ok(text.includes("■ バイオトイレの使い方"));
+    assert.ok(text.includes("トイレットペーパー以外"));
+    assert.ok(text.includes("https://drive.google.com/file/d/1KEaL_tTMpYQvRLeCXy4Qnp-QM5-HVzia/view"));
+    assert.ok(text.includes("■ お願い"));
+    assert.ok(text.includes("花火はウッドデッキの外で"));
   });
 
   it("プランが無くても落ちない", () => {
