@@ -2,6 +2,8 @@
 // 案内メールは予約時に一度送るだけなので、宿泊が近づいた頃には埋もれている。
 // 名簿が未記入のまま当日を迎えるのも困るため、前日にもう一度お知らせする。
 
+import { BIO_TOILET_GUIDE_URL, WIFI_PASSWORD, WIFI_SSID } from "./booking-guide";
+
 export type ReminderInput = {
   guestName: string | null;
   code: string;
@@ -71,6 +73,23 @@ ${input.lookupUrl}` : ""}`,
 ${input.registerUrl}`,
     );
   }
+
+  // 当日に迷いやすいものだけを短く。長い一覧は予約時の案内メールに任せる（重ねるとうるさいため）
+  if (WIFI_SSID) {
+    blocks.push(
+      `■ Wi-Fi
+ネットワーク名（SSID）: ${WIFI_SSID}
+パスワード: ${WIFI_PASSWORD}`,
+    );
+  }
+
+  blocks.push(
+    `■ バイオトイレのご利用について
+トイレットペーパー以外は絶対に流さないでください。故障の原因となります。
+写真つきの使い方: ${BIO_TOILET_GUIDE_URL}
+
+設備のご利用方法やお願いごとは、ご予約時にお送りした「ご宿泊のご案内」メールをご覧ください。`,
+  );
 
   blocks.push(
     `■ お問い合わせ

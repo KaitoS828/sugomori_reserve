@@ -58,6 +58,17 @@ describe("reminderText", () => {
     assert.ok(!text.includes("宿泊者名簿のご記入をお願い"));
   });
 
+  it("Wi-Fi とバイオトイレの注意を載せ、長い案内は予約時のメールに任せる", () => {
+    const text = reminderText(base);
+    assert.ok(text.includes("■ Wi-Fi"));
+    assert.ok(text.includes("■ バイオトイレのご利用について"));
+    assert.ok(text.includes("トイレットペーパー以外は絶対に流さないでください"));
+    assert.ok(text.includes("ご予約時にお送りした「ご宿泊のご案内」メール"));
+    // 設備・お願いの長い一覧は重ねて送らない
+    assert.ok(!text.includes("■ 設備や備品のご利用について"));
+    assert.ok(!text.includes("花火"));
+  });
+
   it("PIN 未発行なら番号を載せず、連絡すると伝える", () => {
     const text = reminderText({ ...base, doorPin: null });
     assert.ok(text.includes("ドアコードは"));
