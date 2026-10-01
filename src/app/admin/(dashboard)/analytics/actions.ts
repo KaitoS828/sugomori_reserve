@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { auditLog } from "@/lib/audit";
 
+import { OTA_SOURCES, STRIPE_SOURCE } from "@/lib/ota-fee";
+
 const PATH = "/admin/analytics";
 
 function redirectError(msg: string, params?: { year?: string; month?: string }): never {
@@ -344,4 +346,33 @@ export async function unarchiveReservationFromAnalytics(formData: FormData) {
   revalidatePath("/admin/reservations");
   revalidatePath("/admin/calendar");
   redirectDone(`予約 ${code} を集計対象に復元しました`, paramObj);
+}
+
+export async function saveOtaFeeRates(formData: FormData) {
+  const supabase = createAdminClient();
+  const rows: { source: string; rate: number; updated_at: string }[] = [];
+  const entries: { source: string; label: string }[] = [...OTA_SOURCES, { source: STRIPE_SOURCE, label: "Stripe（このシステムのカード決済）" }];
+  for (const { source, label } of entries) {
+    const raw = String(formData.get(source) ?? "").trim();
+    if (raw === "") continue;
+    const rate = Number(raw);
+    if (!Number.isFinite(rate) || rate < 0 || rate > 100) {
+      redirectError(`${label} の手数料率は 0〜100 の数字で入力してください`);
+    }
+    rows.push({ source, rate, updated_at: new Date().toISOString() });
+  }
+  if (rows.length > 0) {
+    const { error } = await supabase.from("ota_fee_rates").upsert(rows);
+    if (error) redirectError(`手数料率の保存に失敗しました: ${error.message}`);
+  }
+
+  await auditLog(supabase, {
+    action: "ota_fee_rates_save",
+    entityType: "ota_fee_rates",
+    entityId: null,
+    summary: `OTA手数料率を保存（${rows.map((r) => `${r.source} ${r.rate}%`).join(" / ")}）`,
+  }).catch(() => {});
+
+  revalidatePath(PATH);
+  redirectDone("OTA手数料率を保存しました");
 }

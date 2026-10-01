@@ -33,6 +33,10 @@ const NAV = [
     ],
   },
   {
+    group: "宿泊税",
+    items: [{ href: "/admin/lodging-tax", label: "宿泊税" }],
+  },
+  {
     group: "設定",
     items: [
       { href: "/admin/site-settings", label: "TOPページ設定" },
