@@ -23,7 +23,7 @@ export function CustomMessage({
       <summary className="cursor-pointer px-4 py-2 text-sm font-medium text-gray-800 flex items-center justify-between">
         <span>✉️ 自由文メールを送る</span>
         {lastSentAt && (
-          <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+          <span className="text-xs font-normal text-gray-600 bg-gray-100 px-2 py-0.5 rounded">
             前回送信: {lastSentAt}
           </span>
         )}
@@ -55,11 +55,11 @@ export function CustomMessage({
             <span className="text-xs text-gray-600">宛先: {email}</span>
           </div>
         ) : (
-          <p className="text-xs text-gray-500">メールアドレスが未登録のため送信できません。</p>
+          <p className="text-xs text-gray-600">メールアドレスが未登録のため送信できません。</p>
         )}
 
         <div className="space-y-1">
-          <label className="text-xs text-gray-500">件名</label>
+          <label className="text-xs text-gray-600">件名</label>
           <input
             type="text"
             value={subject}
@@ -70,7 +70,7 @@ export function CustomMessage({
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs text-gray-500">本文</label>
+          <label className="text-xs text-gray-600">本文</label>
           <textarea
             rows={10}
             value={body}
@@ -78,7 +78,7 @@ export function CustomMessage({
             placeholder="本文を入力"
             className="w-full rounded border border-gray-300 px-3 py-2 text-xs leading-relaxed text-gray-900 font-mono focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
           />
-          <p className="text-[11px] text-gray-400">※ 本文内のURLは自動的にリンクとして送信されます。</p>
+          <p className="text-[11px] text-gray-500">※ 本文内のURLは自動的にリンクとして送信されます。</p>
         </div>
       </div>
     </details>
